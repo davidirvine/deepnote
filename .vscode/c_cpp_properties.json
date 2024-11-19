@@ -15,7 +15,7 @@
                 "_UNICODE"
             ],
             "includePath": [
-                "${workspaceFolder}/**",
+                "${workspaceFolder}/src/**",
                 "${DAISYSP_DIR}/**",
                 "${LIBDAISY_DIR}/**"
             ],

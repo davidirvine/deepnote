@@ -12,7 +12,7 @@ set(LIBDAISY_DIR ${CMAKE_SOURCE_DIR}/libDaisy)
 set(DAISYSP_DIR ${CMAKE_SOURCE_DIR}/DaisySP)
 
 project(Blink VERSION 0.1.0 LANGUAGES CXX)
-#enable_testing()
+enable_testing()
 
 #
 # Daisy specific options
