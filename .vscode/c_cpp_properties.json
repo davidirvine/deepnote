@@ -1,7 +1,7 @@
 {
     "env": {
-        "DAISYSP_DIR": "/Users/dirvine/source/electrosmith/daisysp",
-        "LIBDAISY_DIR": "/Users/dirvine/source/electrosmith/libdaisy"
+        "DAISYSP_DIR": "${workspaceFolder}/daisysp",
+        "LIBDAISY_DIR": "${workspaceFolder}/libdaisy"
     },
     "configurations": [
         {

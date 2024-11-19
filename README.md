@@ -2,7 +2,10 @@
 
 This project serves as a template for Daisy Seed development using VSCode. 
 
-`libDaisy` and `DaisySP` libraries are dependencies. You'll need to adjust their filesystem locations in `src/CMakeLists.txt` and `.vscode/c_cpp_properties.json`. This will go away once these repos are added as submodules.
+## Submodules
+
+This repo uses Git submodules so when cloning you'll probably want to use the `--recurse-submodules` option. If you forgot or want to update the submodules recursively use `git submodule update --init --recursive`.
+
 
 ## Build Setup
 ```

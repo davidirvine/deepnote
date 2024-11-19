@@ -2,15 +2,14 @@ add_executable(blink
     main.cpp
 )
 
-# Library Locations
-#   TODO: there should be a better way to do this so relative paths aren't in this file
-#   TODO: perhaps cmake profiles?
-file(REAL_PATH ../../electrosmith/DaisySP DAISYSP_DIR BASE_DIRECTORY "${CMAKE_SOURCE_DIR}")
-file(REAL_PATH ../../electrosmith/libDaisy LIBDAISY_DIR BASE_DIRECTORY "${CMAKE_SOURCE_DIR}")
-
 # Link libraries
-target_link_libraries(blink ${LIBDAISY_DIR}/build/libdaisy.a)
-target_link_libraries(blink ${DAISYSP_DIR}/build/libdaisysp.a)
+target_link_libraries(blink ${CMAKE_BINARY_DIR}/libDaisy/libdaisy.a)
+target_link_libraries(blink ${CMAKE_BINARY_DIR}/DaisySP/libdaisysp.a)
+target_link_libraries(blink ${CMAKE_BINARY_DIR}/libDaisy/Drivers/libSTM32H7XX_HAL_DRIVER.a)
+target_link_libraries(blink ${CMAKE_BINARY_DIR}/libDaisy/Drivers/libCMSIS_DEVICE_H7.a)
+target_link_libraries(blink ${CMAKE_BINARY_DIR}/libDaisy/Middlewares/ST/libSTM32_USB_DEVICE_LIBRARY.a)
+target_link_libraries(blink ${CMAKE_BINARY_DIR}/libDaisy/Middlewares/ST/libSTM32_USB_HOST_LIBRARY.a)
+target_link_libraries(blink ${CMAKE_BINARY_DIR}/libDaisy/Middlewares/Third_Party/FatFs/libFatFs.a)
 
 target_include_directories(blink PRIVATE
     ${DAISYSP_DIR}/Source
