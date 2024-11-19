@@ -1,17 +1,28 @@
-add_executable(blink 
+#
+#   some of the included cmake files depend on TARGET being defined
+#
+set(TARGET blink)
+
+add_executable(${TARGET} 
     main.cpp
 )
 
+#
 # Link libraries
-target_link_libraries(blink ${CMAKE_BINARY_DIR}/libDaisy/libdaisy.a)
-target_link_libraries(blink ${CMAKE_BINARY_DIR}/DaisySP/libdaisysp.a)
-target_link_libraries(blink ${CMAKE_BINARY_DIR}/libDaisy/Drivers/libSTM32H7XX_HAL_DRIVER.a)
-target_link_libraries(blink ${CMAKE_BINARY_DIR}/libDaisy/Drivers/libCMSIS_DEVICE_H7.a)
-target_link_libraries(blink ${CMAKE_BINARY_DIR}/libDaisy/Middlewares/ST/libSTM32_USB_DEVICE_LIBRARY.a)
-target_link_libraries(blink ${CMAKE_BINARY_DIR}/libDaisy/Middlewares/ST/libSTM32_USB_HOST_LIBRARY.a)
-target_link_libraries(blink ${CMAKE_BINARY_DIR}/libDaisy/Middlewares/Third_Party/FatFs/libFatFs.a)
+# Seems odd that we need to specify the libs that libDaisy is dependent on
+#
+target_link_libraries(${TARGET} ${CMAKE_BINARY_DIR}/libDaisy/libdaisy.a)
+target_link_libraries(${TARGET} ${CMAKE_BINARY_DIR}/DaisySP/libdaisysp.a)
+target_link_libraries(${TARGET} ${CMAKE_BINARY_DIR}/libDaisy/Drivers/libSTM32H7XX_HAL_DRIVER.a)
+target_link_libraries(${TARGET} ${CMAKE_BINARY_DIR}/libDaisy/Drivers/libCMSIS_DEVICE_H7.a)
+target_link_libraries(${TARGET} ${CMAKE_BINARY_DIR}/libDaisy/Middlewares/ST/libSTM32_USB_DEVICE_LIBRARY.a)
+target_link_libraries(${TARGET} ${CMAKE_BINARY_DIR}/libDaisy/Middlewares/ST/libSTM32_USB_HOST_LIBRARY.a)
+target_link_libraries(${TARGET} ${CMAKE_BINARY_DIR}/libDaisy/Middlewares/Third_Party/FatFs/libFatFs.a)
 
-target_include_directories(blink PRIVATE
+#
+# Include directories
+#
+target_include_directories(${TARGET} PRIVATE
     ${DAISYSP_DIR}/Source
     ${LIBDAISY_DIR}/src/
     ${LIBDAISY_DIR}/src/sys
@@ -25,8 +36,6 @@ target_include_directories(blink PRIVATE
     ${LIBDAISY_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy
 )
 
-# linker_compiler_options depends on TARGET being defined
-set(TARGET blink)
 include(compiler_linker_options)  
 include(post_build_commands)
 include(add_program_target)
