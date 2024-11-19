@@ -1,0 +1,37 @@
+{
+  "configurations": [
+    {
+      "name": "Debug",
+      "configFiles": [
+          "interface/stlink.cfg",
+          "target/stm32h7x.cfg"
+      ],
+      "cwd": "${workspaceFolder}",
+      "debuggerArgs": [
+          "-d",
+          "${workspaceRoot}/src"
+      ],
+      // Here's where you can put the path to the program you want to debug:
+      //"executable": "${workspaceRoot}/examples/SDMMC_HelloWorld/build/SDMMC_HelloWorld.elf",
+      "executable": "${workspaceRoot}/build/bin/blink.elf",
+      "interface": "swd",
+      "openOCDLaunchCommands": [
+          "init",
+          "reset init",
+          "gdb_breakpoint_override hard"
+      ],
+      "preRestartCommands": [
+          "load",
+          "enable breakpoint",
+          "monitor reset"
+      ],
+      "request": "launch",
+      "runToEntryPoint": "true",
+      "servertype": "openocd",
+      "showDevDebugOutput": "none",
+      "svdFile": "${workspaceRoot}/.vscode/STM32H750x.svd",
+      "type": "cortex-debug"
+    }
+  ],
+  "version": "0.2.0"
+}

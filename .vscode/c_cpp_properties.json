@@ -1,0 +1,33 @@
+{
+    "env": {
+        "DAISYSP_DIR": "/Users/dirvine/source/electrosmith/daisysp",
+        "LIBDAISY_DIR": "/Users/dirvine/source/electrosmith/libdaisy"
+    },
+    "configurations": [
+        {
+            "name": "Daisy",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "compilerPath": "/usr/local/bin/arm-none-eabi-g++",
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${DAISYSP_DIR}/**",
+                "${LIBDAISY_DIR}/**"
+            ],
+            "intelliSenseMode": "gcc-arm",
+            "browse": {
+                "path": [
+                    "${workspaceRoot}"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            }
+        }
+    ],
+    "version": 4
+}
