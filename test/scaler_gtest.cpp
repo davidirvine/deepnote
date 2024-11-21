@@ -1,14 +1,16 @@
 #include "scaler.hpp"
 #include <gtest/gtest.h>
 
+using namespace deepnotedrone;
+
 TEST(ScalerTest, UnipolarInput) {
     auto input_range = Range(0, 1023);
     auto output_range = Range(0.0, 1.0);
 
     Scaler scaler = Scaler(input_range, output_range);
 
-    EXPECT_EQ(scaler(0.0), 0) << "Lower bounds failed";
-    EXPECT_EQ(scaler(1023.0), 1) << "Upper bounds failed";
+    EXPECT_EQ(scaler.scale(0.0), 0) << "Lower bounds failed";
+    EXPECT_EQ(scaler.scale(1023.0), 1) << "Upper bounds failed";
 }
 
 TEST(ScalerTest, BipolarInput) {
@@ -17,8 +19,8 @@ TEST(ScalerTest, BipolarInput) {
 
     Scaler scaler = Scaler(input_range, output_range);
 
-    EXPECT_EQ(scaler(-5.0), 0);
-    EXPECT_EQ(scaler(5.0), 1);
+    EXPECT_EQ(scaler.scale(-5.0), 0);
+    EXPECT_EQ(scaler.scale(5.0), 1);
 }
 
 TEST(ScalerTest, BipolarOutput) {
@@ -27,7 +29,7 @@ TEST(ScalerTest, BipolarOutput) {
 
     Scaler scaler = Scaler(input_range, output_range);
 
-    EXPECT_EQ(scaler(0.5), 0);
-    EXPECT_EQ(scaler(0.0), -5);
+    EXPECT_EQ(scaler.scale(0.5), 0);
+    EXPECT_EQ(scaler.scale(0.0), -5);
 }
 

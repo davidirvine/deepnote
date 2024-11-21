@@ -3,6 +3,7 @@ add_library(ranges_obj OBJECT
 )
 
 target_include_directories(ranges_obj PUBLIC 
+  ${CMAKE_CURRENT_LIST_DIR}
   ${LIBDAISY_DIR}/src
   ${LIBDAISY_DIR}/src/sys
   ${LIBDAISY_DIR}/src/usbh

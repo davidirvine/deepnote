@@ -16,7 +16,6 @@ class Range {
         
         float length() const;
         bool contains(float value) const;
-        float random() const;
 };
 
 }

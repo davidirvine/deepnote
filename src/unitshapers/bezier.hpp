@@ -7,10 +7,13 @@ namespace deepnotedrone {
         
     class BezierUnitShaper : public UnitShaper {
         public:
-            BezierUnitShaper(float y2, float y3) :
+            BezierUnitShaper(const float y2, const float y3) :
                 y2(y2), y3(y3) {}
 
-            float operator()(float t) {
+            //
+            //  TODO: optimize with functions from DaisySP/utility/dsp.h
+            //
+            float shape(const float t) {
                 float y = 
                     (1-t) * (1-t) * y1 + 
                     3 * (1-t) * (1-t) * t * y2 + 

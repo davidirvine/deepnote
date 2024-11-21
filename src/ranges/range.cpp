@@ -1,5 +1,4 @@
 #include "range.hpp"
-#include "daisy_seed.h"
 
 namespace deepnotedrone {
 
@@ -14,9 +13,5 @@ namespace deepnotedrone {
 
     bool Range::contains(float value) const {
         return value >= low && value <= high;
-    }
-
-    float Range::random() const {
-        return daisy::Random::GetFloat(low, high);
     }
 }

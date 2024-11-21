@@ -7,7 +7,7 @@ namespace deepnotedrone {
 
     class LinearUnitShaper : public UnitShaper {
         public:
-            float operator()(float value) {
+            float shape(const float value) {
                 return value;
             }
     };

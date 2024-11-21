@@ -7,7 +7,7 @@ namespace deepnotedrone {
      */
     class UnitShaper {
         public:
-            virtual float operator()(float value) = 0;
+            virtual float shape(const float value) = 0;
     };
 }
 

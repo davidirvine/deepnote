@@ -1,6 +1,8 @@
 #include "range.hpp"
 #include <gtest/gtest.h>
 
+using namespace deepnotedrone;
+
 TEST(RangeTest, RangeLength) {
   Range range(0, 10);
   EXPECT_EQ(range.length(), 10);

@@ -20,6 +20,12 @@ using namespace deepnotedrone;
 namespace deepnotedrone {
 	const int VOICE_COUNT = 26;
 
+	struct LibDaisyRandomFloatGenerator {
+		static float GetRandomFloat(float low, float high) {
+			return Random::GetFloat(low, high);
+		}	
+	};
+
     struct Util {
         static constexpr float ANALOG_READ_MAX() { return 1023.0; };
 
@@ -46,13 +52,15 @@ namespace deepnotedrone {
 		GPIO waveformSelector;
 	};
 
+	using VoiceType = DeepnoteVoice<LibDaisyRandomFloatGenerator>;
+
 	DaisySeed hw;
 	ControlState controlState = {0.0, 0.0, 0.0, false};
 	GpioInputs gpioInputs = {};
-	DeepnoteVoice* voices = nullptr;
+	VoiceType* voices = nullptr;
 
-	DeepnoteVoice* buildVoices(Range startFrequencyRange) {
-		DeepnoteVoice* voices = new DeepnoteVoice[VOICE_COUNT];
+	VoiceType* buildVoices(Range startFrequencyRange) {
+		VoiceType* voices = new VoiceType[VOICE_COUNT];
 		
 		voices[0] = { startFrequencyRange, 1396.91, 0.5 };
 		voices[1] = { startFrequencyRange, 1396.91, 0.5 };

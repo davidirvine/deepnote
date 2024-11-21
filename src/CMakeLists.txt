@@ -6,7 +6,6 @@ set(TARGET deepnote)
 add_executable(${TARGET}
     main.cpp
     $<TARGET_OBJECTS:ranges_obj>
-    $<TARGET_OBJECTS:voice_obj>
 )
 
 #
