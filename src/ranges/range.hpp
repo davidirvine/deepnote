@@ -1,23 +1,24 @@
-#ifndef __RANGE_HPP
-#define __RANGE_HPP
+#pragma once
 
-namespace deepnotedrone {
+class Range 
+{
+public:
+    Range() : 
+        low(0.f), 
+        high(0.f) 
+    {};
 
-class Range {
-    public:
-        float low;
-        float high;
+    Range(float low, float high) :
+        low(low < high ? low : high),
+        high(high > low ? high : low)
+    {};
 
-        Range() = default;
-        Range(float low, float high);
-
-        float getLow() const { return low; }
-        float getHigh() const { return high;}
-        
-        float length() const;
-        bool contains(float value) const;
+    float getLow() const { return low; }
+    float getHigh() const { return high;}
+    
+    float length() const { return high - low; };
+    bool contains(float value) const { return value >= low && value <= high; };
+private:
+    float low;
+    float high;
 };
-
-}
-
-#endif // __RANGE_HPP

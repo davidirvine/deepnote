@@ -12,165 +12,161 @@
 #include "deepnotevoice.hpp"
 #include "range.hpp"
 
-using namespace daisy;
-using namespace daisy::seed;
-using namespace daisysp;
-using namespace deepnotedrone;
 
-namespace deepnotedrone {
-	const int VOICE_COUNT = 26;
-
-	struct LibDaisyRandomFloatGenerator {
-		static float GetRandomFloat(float low, float high) {
-			return Random::GetFloat(low, high);
-		}	
-	};
-
-    struct Util {
-        static constexpr float ANALOG_READ_MAX() { return 1023.0; };
-
-        static float invertValue(float a) {
-            return Util::ANALOG_READ_MAX() - a;
-        }
-
-        static float scaleValue(float a) {
-            return a / Util::ANALOG_READ_MAX();
-        }
-    };
-
-	struct ControlState {
-		float oscFreq;
-		float filterCutoff;
-		float volume;
-		bool waveformSelection;
-	};
-
-	struct GpioInputs {
-		GPIO oscFreqKnob;
-		GPIO filterCutoffKnob;
-		GPIO volumeKnob;
-		GPIO waveformSelector;
-	};
-
-	using VoiceType = DeepnoteVoice<LibDaisyRandomFloatGenerator>;
-
-	DaisySeed hw;
-	ControlState controlState = {0.0, 0.0, 0.0, false};
-	GpioInputs gpioInputs = {};
-	VoiceType* voices = nullptr;
-
-	VoiceType* buildVoices(Range startFrequencyRange) {
-		VoiceType* voices = new VoiceType[VOICE_COUNT];
-		
-		voices[0] = { startFrequencyRange, 1396.91, 0.5 };
-		voices[1] = { startFrequencyRange, 1396.91, 0.5 };
-		voices[2] = { startFrequencyRange, 1396.91, 0.5 };
-		voices[3] = { startFrequencyRange, 1174.66, 0.5 };
-		voices[4] = { startFrequencyRange, 1174.66, 0.5 };
-		voices[5] = { startFrequencyRange, 1174.66, 0.5 };
-		voices[6] = { startFrequencyRange, 659.25, 0.5 };
-		voices[7] = { startFrequencyRange, 659.25, 0.5 };
-		voices[8] = { startFrequencyRange, 659.25, 0.5 };
-		voices[9] = { startFrequencyRange, 587.33, 0.5 };
-		voices[10] = { startFrequencyRange, 587.33, 0.5 };
-		voices[11] = { startFrequencyRange, 587.33, 0.5 };
-		voices[12] = { startFrequencyRange, 440.00, 0.5 };
-		voices[13] = { startFrequencyRange, 440.00, 0.5 };
-		voices[14] = { startFrequencyRange, 440.00, 0.5 };
-		voices[15] = { startFrequencyRange, 293.66, 0.5 };
-		voices[16] = { startFrequencyRange, 293.66, 0.5 };
-		voices[17] = { startFrequencyRange, 293.66, 0.5 };
-		voices[18] = { startFrequencyRange, 146.83, 0.0 };
-		voices[19] = { startFrequencyRange, 146.83, 0.0 };
-		voices[20] = { startFrequencyRange, 110.0, 0.0 };
-		voices[21] = { startFrequencyRange, 110.0, 0.0 };
-		voices[22] = { startFrequencyRange, 73.42, 0.0 };
-		voices[23] = { startFrequencyRange, 73.42, 0.0 };
-		voices[24] = { startFrequencyRange, 36.71, 0.0 };
-		voices[25] = { startFrequencyRange, 36.71, 0.0 };
-
-		return voices;
-	}
-
-
-	GpioInputs setupGpioPins() {
-		GpioInputs inputs;
-		inputs.oscFreqKnob.Init(A0, GPIO::Mode::INPUT);
-		inputs.filterCutoffKnob.Init(A1, GPIO::Mode::INPUT);
-		inputs.volumeKnob.Init(A2, GPIO::Mode::INPUT);
-		inputs.waveformSelector.Init(D18, GPIO::Mode::INPUT, GPIO::Pull::PULLUP);
-		return inputs;
-	}
-
-	float readOscKnob() {
-		return fmap(Util::scaleValue(gpioInputs.oscFreqKnob.Read()), 10, 2000, Mapping::LINEAR);
-	}
-
-	float readFilterKnob() {
-		return fmap(Util::scaleValue(gpioInputs.filterCutoffKnob.Read()), 0, 500, Mapping::LINEAR);
-	}
-
-	float readVolumeKnob() {
-		return 1 - Util::scaleValue(gpioInputs.volumeKnob.Read());
-	}
-
-	bool readWaveformSelector() {
-		return gpioInputs.waveformSelector.Read();
-	}
-
-	struct ControlState getControlState() {
-		struct ControlState controlState = {
-			readOscKnob(),
-			readFilterKnob(),
-			readVolumeKnob(),
-			readWaveformSelector()
-		};
-		return controlState;
-	}
-} // namespace deepnotedrone
-
-
-void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, size_t bufferSize)
+//	deepnotedrone::LibDaisyRandomFloatGenerator is a random number generator 
+//	that uses the libDaisy random number generator.
+struct LibDaisyRandomFloatGenerator 
 {
+	static float GetRandomFloat(float low, float high) 
+	{
+		return daisy::Random::GetFloat(low, high);
+	}	
+};
+
+//
+//	Voices
+//
+using DuoVoiceType = DeepnoteVoice<LibDaisyRandomFloatGenerator, 2>;
+using TripleVoiceType = DeepnoteVoice<LibDaisyRandomFloatGenerator, 3>;
+
+const int TRIPLE_VOICE_COUNT{6};
+const int DUO_VOICE_COUNT{4};
+const Range START_FREQ_RANGE{200, 400};
+
+TripleVoiceType tripleVoices[TRIPLE_VOICE_COUNT] = {
+	{ START_FREQ_RANGE, 1396.91 },
+	{ START_FREQ_RANGE, 1174.66 },
+	{ START_FREQ_RANGE, 659.25 },
+	{ START_FREQ_RANGE, 587.33 },
+	{ START_FREQ_RANGE, 440.00 },
+	{ START_FREQ_RANGE, 293.66 }
+};
+
+DuoVoiceType duoVoices[DUO_VOICE_COUNT] = {
+	{ START_FREQ_RANGE, 146.83 },
+	{ START_FREQ_RANGE, 110.0 },
+	{ START_FREQ_RANGE, 73.42 },
+	{ START_FREQ_RANGE, 36.71 }
+};
+
+enum AdcChannelId 
+{
+	OSC_FREQ = 0,
+	FILTER_CUTOFF,
+	VOLUME,
+	NUM_ADC_CHANNEL
+};
+
+//	Values for the knobs and switches
+float valueOscFreq{0.f};
+float valueFilterCutoff{0.f};
+float valueVolume{0.f};
+bool valueWaveformSelector{false};
+
+
+void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::OutputBuffer out, size_t bufferSize)
+{
+	//
+	//	Real-time audio processing
+	//
 	for (size_t bufferIndex = 0; bufferIndex < bufferSize; bufferIndex++) {
-		auto output = 0.0;
-		for (size_t voiceIndex = 0; voiceIndex < VOICE_COUNT; ++voiceIndex) {
-			output += voices[voiceIndex].Process();
+		auto output{0.0f};
+		for (auto& voice : tripleVoices) {
+			output += voice.Process() * valueVolume;
 		}
-		out[0][bufferIndex] = output * controlState.volume;
-		out[1][bufferIndex] = output * controlState.volume;
+		for (auto& voice : duoVoices) {
+			output += voice.Process() * valueVolume;
+		}
+
+		out[0][bufferIndex] = output;
+		out[1][bufferIndex] = output;
 	}
 }
+
 
 
 int main(void)
 {
+	daisy::DaisySeed hw;
+
 	hw.Init();
 	hw.SetAudioBlockSize(4); // number of samples handled per callback
 	hw.SetAudioSampleRate(daisy::SaiHandle::Config::SampleRate::SAI_48KHZ);
-	auto sample_rate = hw.AudioSampleRate();
+	//auto sample_rate = hw.AudioSampleRate();
 
 	//
-	//	coinfigure the GPIO pins for the knobs and switches
+	// Setup logging
 	//
-	gpioInputs = setupGpioPins();
+	// HEADS UP! StartLog will block until a serial terminal is connected
+	//
+    hw.StartLog(true);
+    hw.PrintLine("deepnotedrone starting...");
 
 	//
-	//	coinstruct and intiaize the voices
+	//	Configure IO for external controls
 	//
-	voices = buildVoices(Range(200, 400));
-	for (auto i = 0; i < VOICE_COUNT; ++i) {
-		voices[i].Init(
-			sample_rate, 
-			Random::GetFloat(10.0, 60.0),  	//	detune rate Hz
-			Random::GetFloat(0.0, 1.0)		//	animation rate Hz
-		);	
-	}
-	
+	//	Configure ADC channels
+	daisy::AdcChannelConfig adcChannels[NUM_ADC_CHANNEL];
+	//	oscillator frequenct channel
+	adcChannels[OSC_FREQ].InitSingle(daisy::seed::A0);
+	//	filter cutoff channel
+	adcChannels[FILTER_CUTOFF].InitSingle(daisy::seed::A1);
+	//	volume channel
+	adcChannels[VOLUME].InitSingle(daisy::seed::A2);
+	//	Initialize the ADC
+	hw.adc.Init(adcChannels, NUM_ADC_CHANNEL);
+
+	//	waveform selector switch
+	daisy::Switch waveformSelector;
+	waveformSelector.Init(
+		daisy::seed::D18, 
+		0.f, 
+		daisy::Switch::Type::TYPE_TOGGLE, 
+		daisy::Switch::Polarity::POLARITY_NORMAL,
+		daisy::GPIO::Pull::PULLUP);
+
+
+	//
+	//	initialize the voices
+	//
+	// for (auto voice : trippleVoices) {
+	// 	voice.Init(sample_rate, 0.1f);
+	// }
+
+	// for (auto voice : duoVoices) {
+	// 	voice.Init(sample_rate, 0.1f);
+	// }
+
+
+	//	Start the real-time audio processing
 	hw.StartAudio(AudioCallback);
 
+	//	Loop forever performing non real-time tasks
 	while(1) {
-		controlState = getControlState();
+		//
+		//	Handle controls
+		//
+		const Range OSC_FREQ_RANGE{10.f, 2000.f};
+		const Range FILTER_FREQ_RANGE{0.f, 500.f};
+
+		valueOscFreq = daisysp::fmap(
+			hw.adc.GetFloat(OSC_FREQ), 
+			OSC_FREQ_RANGE.getLow(), 
+			OSC_FREQ_RANGE.getHigh(), 
+			daisysp::Mapping::LINEAR);
+
+		valueFilterCutoff = daisysp::fmap(
+			hw.adc.GetFloat(FILTER_CUTOFF), 
+			FILTER_FREQ_RANGE.getLow(), 
+			FILTER_FREQ_RANGE.getHigh(), 
+			daisysp::Mapping::LINEAR);
+
+		valueVolume = daisysp::fmap(
+			hw.adc.GetFloat(VOLUME), 
+			0.f, 
+			1.f, 
+			daisysp::Mapping::LINEAR);
+
+		valueWaveformSelector = waveformSelector.Pressed();
 	}
 }
-

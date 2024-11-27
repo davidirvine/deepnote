@@ -1,7 +1,19 @@
 {
   "configurations": [
     {
-      "name": "Debug",
+      "name": "Unit Test Debug",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceRoot}/test/build/bin/voice_gtest",
+      "args": [],
+      "stopAtEntry": true,
+      "cwd": "${workspaceRoot}/test/build/bin",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "lldb"
+    },
+    {
+      "name": "On Device Debug",
       "configFiles": [
           "interface/stlink.cfg",
           "target/stm32h7x.cfg"
@@ -13,7 +25,7 @@
       ],
       // Here's where you can put the path to the program you want to debug:
       //"executable": "${workspaceRoot}/examples/SDMMC_HelloWorld/build/SDMMC_HelloWorld.elf",
-      "executable": "${workspaceRoot}/build/bin/blink.elf",
+      "executable": "${workspaceRoot}/build/bin/deepnote.elf",
       "interface": "swd",
       "openOCDLaunchCommands": [
           "init",
@@ -31,7 +43,8 @@
       "showDevDebugOutput": "none",
       "svdFile": "${workspaceRoot}/.vscode/STM32H750x.svd",
       "type": "cortex-debug"
-    }
+    },
+    
   ],
   "version": "0.2.0"
 }

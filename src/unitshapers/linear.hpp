@@ -1,16 +1,12 @@
-#ifndef __LINEAR_UNIT_SHAPER_HPP
-#define __LINEAR_UNIT_SHAPER_HPP
+#pragma once
 
 #include "unitshaper.hpp"
 
-namespace deepnotedrone {
-
-    class LinearUnitShaper : public UnitShaper {
-        public:
-            float shape(const float value) {
-                return value;
-            }
-    };
-}
-
-#endif // __LINEAR_UNIT_SHAPER_HPP
+class LinearUnitShaper : public UnitShaper 
+{
+public:
+    float shape(const float value) 
+    {
+        return value;
+    }
+};

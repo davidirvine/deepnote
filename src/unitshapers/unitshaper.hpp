@@ -1,14 +1,10 @@
-#ifndef __UNITSHAPER_HPP
-#define __UNITSHAPER_HPP
+#pragma once
 
-namespace deepnotedrone {
-    /**
-     * Takes linear input from 0.0 to 1.0 and returns a shaped output.
-     */
-    class UnitShaper {
-        public:
-            virtual float shape(const float value) = 0;
-    };
-}
-
-#endif //__UNITSHAPER_HPP
+//
+//  Takes linear input from 0.0 to 1.0 and returns a shaped output.
+//
+class UnitShaper 
+{
+    public:
+        virtual float shape(const float value) = 0;
+};

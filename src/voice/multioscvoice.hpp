@@ -1,6 +1,4 @@
-#ifndef __MULTIOSCVOICE_HPP
-#define __MULTIOSCVOICE_HPP
-
+#pragma once
 
 class MultiOscVoice {
 
@@ -8,5 +6,3 @@ class MultiOscVoice {
 
 };
 
-
-#endif // __MULTIOSCVOICE_HPP

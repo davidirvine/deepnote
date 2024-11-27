@@ -5,31 +5,26 @@ set(TARGET deepnote)
 
 add_executable(${TARGET}
     main.cpp
-    $<TARGET_OBJECTS:ranges_obj>
 )
 
 #
 # Link libraries
 # Seems odd that we need to specify the libs that libDaisy is dependent on
 #
-target_link_libraries(${TARGET} PUBLIC
-    ${CMAKE_BINARY_DIR}/libDaisy/libdaisy.a
-    ${CMAKE_BINARY_DIR}/DaisySP/libdaisysp.a
-    ${CMAKE_BINARY_DIR}/libDaisy/Drivers/libSTM32H7XX_HAL_DRIVER.a
-    ${CMAKE_BINARY_DIR}/libDaisy/Drivers/libCMSIS_DEVICE_H7.a
-    ${CMAKE_BINARY_DIR}/libDaisy/Middlewares/ST/libSTM32_USB_DEVICE_LIBRARY.a
-    ${CMAKE_BINARY_DIR}/libDaisy/Middlewares/ST/libSTM32_USB_HOST_LIBRARY.a
-    ${CMAKE_BINARY_DIR}/libDaisy/Middlewares/Third_Party/FatFs/libFatFs.a
+target_link_libraries(${TARGET} PRIVATE
+    ${DAISYSP_DIR}/build/libdaisysp.a
+    ${LIBDAISY_DIR}/build/libdaisy.a
 )
 
 #
 # Include directories
 #
-target_include_directories(${TARGET} PUBLIC
+target_include_directories(${TARGET} PRIVATE
     ranges
     unitshapers
     voice
     ${DAISYSP_DIR}/Source
+    ${DAISYSP_DIR}/Source/Utility
     ${LIBDAISY_DIR}/src
     ${LIBDAISY_DIR}/src/sys
     ${LIBDAISY_DIR}/src/usbh
@@ -48,4 +43,4 @@ add_subdirectory(voice)
 
 include(compiler_linker_options)  
 include(post_build_commands)
-include(add_program_target)
+include(program_commands)

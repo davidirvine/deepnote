@@ -11,16 +11,20 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(LIBDAISY_DIR ${CMAKE_SOURCE_DIR}/libDaisy)
 set(DAISYSP_DIR ${CMAKE_SOURCE_DIR}/DaisySP)
 
-project(Blink VERSION 0.1.0 LANGUAGES CXX)
-enable_testing()
+project(Deepnote VERSION 0.1.0 LANGUAGES CXX)
 
 #
-# Daisy specific options
+# Where shuld this progeam be installed and run from? Possible values are:
+# BOOT_FLASH, BOOT_SRAM, BOOT_QSPI
 #
-set(DAISY_STORAGE flash CACHE STRING "Select the storage destination of the executable.")
+# Both BOOT_SRAM and BOOT_QSPI require the Daisy bootloader to be installed.
+#
+# Use "make program-bootloader" to install the bootloader
+# before installing your program
+#
+# See: add_program_commands.cmake
+#
+set(EXECUTABLE_STORAGE_LOCATION BOOT_FLASH)
 
-add_subdirectory(${LIBDAISY_DIR})
-add_subdirectory(${DAISYSP_DIR})
+include(add_external_projects)
 add_subdirectory(src bin)
-#add_subdirectory(test)
-
