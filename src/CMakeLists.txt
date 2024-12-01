@@ -3,9 +3,19 @@
 #
 set(TARGET deepnote)
 
-add_executable(${TARGET}
+set(SOURCES 
     main.cpp
 )
+
+add_executable(${TARGET} ${SOURCES})
+
+# Source file specific compiler options
+foreach(SRC_FILE ${SOURCES})
+    get_filename_component(src_basename ${SRC_FILE} NAME_WLE)
+    set_source_files_properties(${SRC_FILE} PROPERTIES 
+        COMPILE_FLAGS "-Wa,-a,-ad,-alms=${CMAKE_CURRENT_BINARY_DIR}/${src_basename}.lst"
+    )
+endforeach()
 
 #
 # Link libraries
