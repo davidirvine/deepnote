@@ -29,7 +29,7 @@ target_link_libraries(${TARGET} PRIVATE
 #
 # Include directories
 #
-target_include_directories(${TARGET} PRIVATE
+include_directories(
     ranges
     unitshapers
     voice

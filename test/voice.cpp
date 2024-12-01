@@ -1,14 +1,12 @@
 #include "deepnotevoice.hpp"
 #include "deepnotevoice_impl.hpp"
 #include "range.hpp"
-#include <gtest/gtest.h>
+#include <doctest/doctest.h>
 #include <random>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
 
-using namespace deepnotedrone;
-using namespace std;
 
 struct StdLibRandomFloatGenerator {
     static float GetRandomFloat(float low, float high) {
@@ -25,9 +23,9 @@ struct OfstreamCsvTrace {
         out.close();
     }
 
-    void open(const string& filename) {
+    void open(const std::string& filename) {
         out.open(filename);
-        out << "index, start_low, start_high, targetFreq, in_state, out_state, animationLfo, shapedAnimation, animationFreq, frequency, oscValue" << endl;
+        out << "index, start_low, start_high, targetFreq, in_state, out_state, animationLfo, shapedAnimation, animationFreq, frequency, oscValue" << std::endl;
     }
 
     void trace(const Range startRange, const float targetFreq, const int in_state, const int out_state, 
@@ -35,7 +33,7 @@ struct OfstreamCsvTrace {
         const float frequency, const float oscValue) 
     {
         static uint64_t index = 0;
-        out << fixed << setprecision(4) 
+        out << std::fixed << std::setprecision(4) 
             << ++index 
             << ", " << startRange.getLow() << ", " << startRange.getHigh() 
             << ", " << targetFreq 
@@ -46,17 +44,16 @@ struct OfstreamCsvTrace {
             << ", " << animationFreq 
             << ", " << frequency 
             << ", " << oscValue 
-            << endl;
+            << std::endl;
     }
 
     private:
-        ofstream out;
+        std::ofstream out;
 };
-
 
 using TestVoiceType = DeepnoteVoice<StdLibRandomFloatGenerator, 2, OfstreamCsvTrace>;
 
-TEST(VoiceTest, LogSingleCycle) {
+TEST_CASE("DeepnoteVoice log single cycle") {
     const float sampleRate{48000};
     const Range startFrequencyRange{200.0f, 400.0f};
     const float targetFrequency{20000.0f};
