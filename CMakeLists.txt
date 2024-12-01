@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.31)
 
 cmake_policy(SET CMP0048 NEW)
 cmake_policy(SET CMP0135 NEW)
@@ -8,8 +8,8 @@ include (${CMAKE_CURRENT_LIST_DIR}/cmake/toolchains/autodetect.cmake)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 # Library Locations
-set(LIBDAISY_DIR ${CMAKE_SOURCE_DIR}/libDaisy)
-set(DAISYSP_DIR ${CMAKE_SOURCE_DIR}/DaisySP)
+set(LIBDAISY_DIR ${CMAKE_SOURCE_DIR}/thirdparty/libDaisy)
+set(DAISYSP_DIR ${CMAKE_SOURCE_DIR}/thirdparty/DaisySP)
 
 project(Deepnote VERSION 0.1.0 LANGUAGES CXX)
 
