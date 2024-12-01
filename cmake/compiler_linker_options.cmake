@@ -53,7 +53,6 @@ target_link_options(${TARGET} PUBLIC
   $<$<CXX_COMPILER_ID:GNU>:LINKER:--print-memory-usage>
 )
 
-
 add_compile_definitions(
   -DUSE_HAL_DRIVER
   -DSTM32H750xx
@@ -70,6 +69,9 @@ add_compile_definitions(
 
 set(c_flags 
   ${MCU}  
+  -MMD 
+  -MP 
+  -O2 
   -Wall 
   -Wno-missing-attributes 
   -fasm 
@@ -87,7 +89,6 @@ set(cxx_flags
   -fno-move-loop-invariants
   -fno-unwind-tables
   -fno-rtti
-  -fasm
   -Wno-register
 )
 
