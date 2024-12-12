@@ -2,6 +2,9 @@
 
 #include "unitshaper.hpp"
 
+namespace deepnote 
+{
+
 class LinearUnitShaper : public UnitShaper 
 {
 public:
@@ -10,3 +13,5 @@ public:
         return value;
     }
 };
+    
+} // namespace deepnote 
