@@ -1,6 +1,3 @@
-#
-#   some of the included cmake files depend on TARGET being defined
-#
 set(TARGET deepnote)
 
 set(SOURCES 
@@ -17,24 +14,19 @@ foreach(SRC_FILE ${SOURCES})
     )
 endforeach()
 
-#
-# Link libraries
-# Seems odd that we need to specify the libs that libDaisy is dependent on
-#
 target_link_libraries(${TARGET} PRIVATE
     ${DAISYSP_DIR}/build/libdaisysp.a
+    ${DAISYSP_DIR}/DaisySP-LGPL/build/libdaisysp-lgpl.a
     ${LIBDAISY_DIR}/build/libdaisy.a
 )
 
-#
-# Include directories
-#
 include_directories(
     ranges
     unitshapers
     voice
     ${DAISYSP_DIR}/Source
     ${DAISYSP_DIR}/Source/Utility
+    ${DAISYSP_DIR}/DaisySP-LGPL/Source
     ${LIBDAISY_DIR}/src
     ${LIBDAISY_DIR}/src/sys
     ${LIBDAISY_DIR}/src/usbh

@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.31)
 project(deepnote-test)
 
-
 include_directories( 
     ../src/unitshapers
     ../src/ranges
@@ -32,6 +31,8 @@ set_target_properties(tests PROPERTIES
   C_STANDARD_REQUIRED YES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
+
+target_compile_options(tests PRIVATE -g)
 
 add_test(NAME tests COMMAND tests)
 enable_testing()

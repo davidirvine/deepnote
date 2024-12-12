@@ -4,7 +4,7 @@
       "name": "Unit Test Debug",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceRoot}/test/build/bin/voice_gtest",
+      "program": "${workspaceRoot}/test/build/bin/tests",
       "args": [],
       "stopAtEntry": true,
       "cwd": "${workspaceRoot}/test/build/bin",

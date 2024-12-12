@@ -3,19 +3,23 @@
 #include "deepnotevoice.hpp"
 #include "scaler.hpp"
 
-
+namespace deepnote
+{
+    
 template <typename RandomT, size_t numOscillators, typename TraceT>
 void DeepnoteVoice<RandomT, numOscillators, TraceT>::Init(const float sampleRate, const float animationRate) 
 {
-    initOscillators(sampleRate, daisysp::Oscillator::WAVE_POLYBLEP_SAW, startFrequency, DEFAULT_DETUNE_INCREMENT);
+    startFrequency = random.GetFloat(startFrequencyRange.getLow(), startFrequencyRange.getHigh());
+    validFrequencyRange = Range{startFrequency < targetFrequency ? startFrequencyRange.getLow() : startFrequencyRange.getHigh(), targetFrequency};
 
-    //  
-    //  animationLfo will be used to move the oscillator frequency from start to target
-    //
+    animationScaler = Scaler(Range{0.f, 1.f}, Range{startFrequency, targetFrequency});
+
     animationLfo.Init(sampleRate);
-    animationLfo.SetAmp(0.5f);  // range of values should be between -1 and 1
-    animationLfo.SetFreq(animationRate);    // the animation will complete in 1 full cycle
+    animationLfo.SetAmp(0.5f);
+    animationLfo.SetFreq(animationRate);  
     animationLfo.SetWaveform(daisysp::Oscillator::WAVE_RAMP);
+    
+    initOscillators(sampleRate, daisysp::Oscillator::WAVE_POLYBLEP_SAW, startFrequency, DEFAULT_DETUNE_INCREMENT);
 }
 
 template <typename RandomT, size_t numOscillators, typename TraceT>
@@ -35,7 +39,7 @@ void DeepnoteVoice<RandomT, numOscillators, TraceT>::initOscillators(const float
 template <typename RandomT, size_t numOscillators, typename TraceT>
 void DeepnoteVoice<RandomT, numOscillators, TraceT>::computeDetune(const float detuneIncrement) 
 {
-    const size_t half = numOscillators / 2;
+    const auto half = numOscillators / 2;
     for (size_t i = 0; i < numOscillators; ++i) {
         auto& osc = oscillators[i];
         if (numOscillators <= 1) {
@@ -63,21 +67,31 @@ float DeepnoteVoice<RandomT, numOscillators, TraceT>::oscillatorsProcess(const f
 template <typename RandomT, size_t numOscillators, typename TraceT>
 float DeepnoteVoice<RandomT, numOscillators, TraceT>::Process() 
 {
-    const auto ANIMATION_LFO_OFFSET{0.5f}; //  animationLfo is requrired to return values between -0.5 and 0.5
     const auto in_state{state};
-    const auto animationLfoValue = animationLfo.Process() + ANIMATION_LFO_OFFSET;
-    auto shapedAnimationValue = animationShaper.shape(animationLfoValue);
+    
+    switch (state)
+    {
+        case PENDING_TRANSIT_TO_TARGET:
+            state = IN_TRANSIT_TO_TARGET;
+            animationLfo.Reset();
+            break;
 
-    //
-    //  if we're heading back to the start invert the shapedAnimationValue
-    //
-    if (state == IN_TRANSIT_TO_START) {
-        shapedAnimationValue = 1.f - shapedAnimationValue;
+        case PENDING_TRANSIT_TO_START:
+            state = IN_TRANSIT_TO_START;
+            animationLfo.Reset();
+            break;
+        default:
+            break;
     }
 
-    auto animationFreq{0.f};
-    auto frequency{0.f};
-    switch (state) {
+    const float ANIMATION_LFO_OFFSET{0.5f}; //  animationLfo is requrired to return values between -0.5 and 0.5
+    const auto animationLfoValue = animationLfo.Process() + ANIMATION_LFO_OFFSET;
+    auto shapedAnimationValue = animationShaper.shape(animationLfoValue);
+    float animationFreq{0.f};
+    float frequency{0.f};
+
+    switch (state) 
+    {
         case AT_START:
             frequency = startFrequency;
             break;
@@ -85,27 +99,54 @@ float DeepnoteVoice<RandomT, numOscillators, TraceT>::Process()
         case AT_TARGET:
             frequency = targetFrequency;
             break;
-        
+
         default:
+            if ((startFrequency > targetFrequency) || (state == IN_TRANSIT_TO_START))
+            {
+                shapedAnimationValue = 1.f - shapedAnimationValue;
+            }
+
             animationFreq = animationScaler.scale(shapedAnimationValue);
             frequency = animationFreq;
             break;
     }
 
-    //
-    //  frequency should be bounded by the startFrequencyRange and targetFrequency
-    //
-    if (frequency < startFrequencyRange.getLow()) {
-        frequency = startFrequencyRange.getLow();
-    } else if (frequency > targetFrequency) {
-        frequency = targetFrequency;
+    if (!validFrequencyRange.contains(frequency))
+    {
+        switch (state)
+        {
+            case IN_TRANSIT_TO_START:
+                state = AT_START;
+                break;
+            case IN_TRANSIT_TO_TARGET:
+                state = AT_TARGET;
+                break;
+            default:
+                break;
+        }
+        frequency = validFrequencyRange.constrain(frequency);
     }
-
-    //
-    //  Update the state based on the current frequency
-    //
-    state = state == IN_TRANSIT_TO_START && startFrequencyRange.contains(frequency) ? AT_START : state;
-    state = state == IN_TRANSIT_TO_TARGET && frequency == targetFrequency ? AT_TARGET : state;
+    else
+    {
+        if (state == IN_TRANSIT_TO_START)
+        {
+            const Range r{startFrequency - 1, startFrequency + 1};
+            if  (r.contains(frequency))
+            {
+                state = AT_START;
+                frequency = startFrequency;
+            }
+        }
+        else if (state == IN_TRANSIT_TO_TARGET)
+        {
+            const Range r{targetFrequency - 1, targetFrequency + 1};
+            if (r.contains(frequency))
+            {
+                state = AT_TARGET;
+                frequency = targetFrequency;
+            }
+        }
+    }
 
     //
     //  Let the ocillators run
@@ -119,3 +160,5 @@ float DeepnoteVoice<RandomT, numOscillators, TraceT>::Process()
 
     return oscValue;
 }
+
+} // namespace deepnote

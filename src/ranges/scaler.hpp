@@ -2,6 +2,9 @@
 
 #include "range.hpp"
 
+namespace deepnote 
+{
+
 class Scaler 
 {
 public:
@@ -16,6 +19,11 @@ public:
     {}
 
     Scaler(const Range input) : Scaler(input, Range(0.0, 1.0)) 
+    {}
+    
+    Scaler(const Scaler& other) : 
+        input(other.input), 
+        output(other.output) 
     {}
     
     float scale(const float value) const 
@@ -38,3 +46,5 @@ private:
     Range input;
     Range output;   
 };
+
+} // namespace deepnote
