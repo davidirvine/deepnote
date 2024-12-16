@@ -26,21 +26,31 @@ public:
         output(other.output) 
     {}
     
-    float scale(const float value) const 
+    Scaler& operator=(const Scaler& other) 
+    {
+        if (this != &other)
+        {
+            input = other.input;
+            output = other.output;
+        }
+        return *this;
+    }
+
+    float Scale(const float value) const 
     {
         //
         //  normalize the input value to a range between 0.0 and 1.0
         //  then scale it to the output range
         //  then offset it to the output start
         //
-        return (normalize(value) * output.length()) + output.getLow();
+        return (Normalize(value) * output.Length()) + output.GetLow();
     }
 
 private:
 
-    float normalize(const float value) const 
+    float Normalize(const float value) const 
     {
-        return (value - input.getLow()) / input.length();
+        return (value - input.GetLow()) / input.Length();
     }
 
     Range input;

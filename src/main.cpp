@@ -30,7 +30,7 @@ struct LibDaisyRandom
 using DuoVoiceType = deepnote::DeepnoteVoice<LibDaisyRandom, 2>;
 using TrioVoiceType = deepnote::DeepnoteVoice<LibDaisyRandom, 3>;
 
-const deepnote::Range START_FREQ_RANGE{200, 400};
+const deepnote::Range START_FREQ_RANGE{200.f, 400.f};
 
 TrioVoiceType trioVoices[4] = {
 	{ START_FREQ_RANGE, 1396.91 },
@@ -136,12 +136,12 @@ int main(void)
 	//
 	for (auto& voice : trioVoices) 
 	{
-		voice.Init(sample_rate, daisy::Random::GetFloat(animationRateRange.getLow(), animationRateRange.getHigh()));
+		voice.Init(sample_rate, daisy::Random::GetFloat(animationRateRange.GetLow(), animationRateRange.GetHigh()));
 	}
 
 	for (auto& voice : duoVoices) 
 	{
-		voice.Init(sample_rate, daisy::Random::GetFloat(animationRateRange.getLow(), animationRateRange.getHigh()));
+		voice.Init(sample_rate, daisy::Random::GetFloat(animationRateRange.GetLow(), animationRateRange.GetHigh()));
 	}
 
 	filter.Init(sample_rate);
@@ -161,14 +161,14 @@ int main(void)
 
 		valueDetune = daisysp::fmap(
 			hw.adc.GetFloat(DETUNE), 
-			DETUNE_RANGE.getLow(), 
-			DETUNE_RANGE.getHigh(), 
+			DETUNE_RANGE.GetLow(), 
+			DETUNE_RANGE.GetHigh(), 
 			daisysp::Mapping::LINEAR);
 
 		valueFilterCutoff = daisysp::fmap(
 			hw.adc.GetFloat(FILTER_CUTOFF), 
-			FILTER_FREQ_RANGE.getLow(), 
-			FILTER_FREQ_RANGE.getHigh(), 
+			FILTER_FREQ_RANGE.GetLow(), 
+			FILTER_FREQ_RANGE.GetHigh(), 
 			daisysp::Mapping::LINEAR);
 
 		valueVolume = daisysp::fmap(
@@ -183,13 +183,13 @@ int main(void)
 			for (auto& voice : trioVoices) 
 			{
 				valueTravelSelector ? voice.TransitionToTarget() : voice.TransitionToStart();
-				voice.SetAnimationRate(daisy::Random::GetFloat(animationRateRange.getLow(), animationRateRange.getHigh()));
+				voice.SetAnimationRate(daisy::Random::GetFloat(animationRateRange.GetLow(), animationRateRange.GetHigh()));
 			}
 
 			for (auto& voice : duoVoices) 
 			{
 				valueTravelSelector ? voice.TransitionToTarget() : voice.TransitionToStart();
-				voice.SetAnimationRate(daisy::Random::GetFloat(animationRateRange.getLow(), animationRateRange.getHigh()));
+				voice.SetAnimationRate(daisy::Random::GetFloat(animationRateRange.GetLow(), animationRateRange.GetHigh()));
 			}
 		}
 

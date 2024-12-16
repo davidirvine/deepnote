@@ -8,7 +8,7 @@ namespace deepnote
 class LinearUnitShaper : public UnitShaper 
 {
 public:
-    float shape(const float value) 
+    float Shape(const float value) 
     {
         return value;
     }
