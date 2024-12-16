@@ -21,13 +21,17 @@ public:
         y3(other.y3) 
     {}
 
-    void operator=(const BezierUnitShaper& other) 
+    BezierUnitShaper& operator=(const BezierUnitShaper& other) 
     {
-        y2 = other.y2;
-        y3 = other.y3;
+        if (this != &other)
+        {
+            y2 = other.y2;
+            y3 = other.y3;
+        }
+        return *this;
     }
 
-    float shape(const float t) 
+    float Shape(const float t) 
     {
         float y = 
             (1-t) * (1-t) * y1 + 

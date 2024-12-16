@@ -42,6 +42,15 @@ public:
         animationShaper(0.8f, 0.5f)
     {}
 
+    DeepnoteVoice(const DeepnoteVoice& other) :
+        startFrequencyRange(other.startFrequencyRange),
+        startFrequency(other.startFrequency),
+        targetFrequency(other.targetFrequency),
+        validFrequencyRange(other.validFrequencyRange),
+        animationScaler(other.animationScaler),
+        animationShaper(other.animationShaper)
+    {}
+    
     ~DeepnoteVoice() 
     {}
 
@@ -127,7 +136,6 @@ private:
     BezierUnitShaper animationShaper;
     TraceT* tracer{nullptr};
     RandomT random;
-    float lastFrequency{0.f};
 };
 
 } // namespace deepnote

@@ -9,8 +9,8 @@ namespace deepnote
 template <typename RandomT, size_t numOscillators, typename TraceT>
 void DeepnoteVoice<RandomT, numOscillators, TraceT>::Init(const float sampleRate, const float animationRate) 
 {
-    startFrequency = random.GetFloat(startFrequencyRange.getLow(), startFrequencyRange.getHigh());
-    validFrequencyRange = Range{startFrequency < targetFrequency ? startFrequencyRange.getLow() : startFrequencyRange.getHigh(), targetFrequency};
+    startFrequency = random.GetFloat(startFrequencyRange.GetLow(), startFrequencyRange.GetHigh());
+    validFrequencyRange = Range{startFrequency < targetFrequency ? startFrequencyRange.GetLow() : startFrequencyRange.GetHigh(), targetFrequency};
 
     animationScaler = Scaler(Range{0.f, 1.f}, Range{startFrequency, targetFrequency});
 
@@ -68,7 +68,7 @@ template <typename RandomT, size_t numOscillators, typename TraceT>
 float DeepnoteVoice<RandomT, numOscillators, TraceT>::Process() 
 {
     const auto in_state{state};
-    
+    //  if we in a pending state, reset the animation LFO and move to the next state
     switch (state)
     {
         case PENDING_TRANSIT_TO_TARGET:
@@ -84,9 +84,14 @@ float DeepnoteVoice<RandomT, numOscillators, TraceT>::Process()
             break;
     }
 
-    const float ANIMATION_LFO_OFFSET{0.5f}; //  animationLfo is requrired to return values between -0.5 and 0.5
+    //  Take the linear ramp of the animation LFO and apply the shaper to it
+    //  This will give us some non-linear frequency changes
+    //  The animation LFO has an range of -0.5 to 0.5, so we need to offset it
+    //  The shaper takes and returns values from 0.0 to 1.0
+    const float ANIMATION_LFO_OFFSET{0.5f};
     const auto animationLfoValue = animationLfo.Process() + ANIMATION_LFO_OFFSET;
-    auto shapedAnimationValue = animationShaper.shape(animationLfoValue);
+    auto shapedAnimationValue = animationShaper.Shape(animationLfoValue);
+
     float animationFreq{0.f};
     float frequency{0.f};
 
@@ -101,18 +106,44 @@ float DeepnoteVoice<RandomT, numOscillators, TraceT>::Process()
             break;
 
         default:
+            //  If we want the frequency to decrease we need to flip the shaped value
             if ((startFrequency > targetFrequency) || (state == IN_TRANSIT_TO_START))
             {
                 shapedAnimationValue = 1.f - shapedAnimationValue;
             }
 
-            animationFreq = animationScaler.scale(shapedAnimationValue);
+            //  Scale the 0.0 to 1.0 shaped value to the start and target frequency range
+            animationFreq = animationScaler.Scale(shapedAnimationValue);
             frequency = animationFreq;
             break;
     }
 
-    if (!validFrequencyRange.contains(frequency))
+    if (validFrequencyRange.Contains(frequency))
     {
+        //  The frequency is within the valid range, so check to see if we've
+        //  reached the start or target frequency
+        if (state == IN_TRANSIT_TO_START)
+        {
+            const Range r{startFrequency - 1, startFrequency + 1};
+            if  (r.Contains(frequency))
+            {
+                state = AT_START;
+                frequency = startFrequency;
+            }
+        }
+        else if (state == IN_TRANSIT_TO_TARGET)
+        {
+            const Range r{targetFrequency - 1, targetFrequency + 1};
+            if (r.Contains(frequency))
+            {
+                state = AT_TARGET;
+                frequency = targetFrequency;
+            }
+        }
+    }
+    else
+    {
+        // The frequency is outside the valid range, so clamp it and set the state
         switch (state)
         {
             case IN_TRANSIT_TO_START:
@@ -124,35 +155,13 @@ float DeepnoteVoice<RandomT, numOscillators, TraceT>::Process()
             default:
                 break;
         }
-        frequency = validFrequencyRange.constrain(frequency);
+        frequency = validFrequencyRange.Constrain(frequency);
     }
-    else
-    {
-        if (state == IN_TRANSIT_TO_START)
-        {
-            const Range r{startFrequency - 1, startFrequency + 1};
-            if  (r.contains(frequency))
-            {
-                state = AT_START;
-                frequency = startFrequency;
-            }
-        }
-        else if (state == IN_TRANSIT_TO_TARGET)
-        {
-            const Range r{targetFrequency - 1, targetFrequency + 1};
-            if (r.contains(frequency))
-            {
-                state = AT_TARGET;
-                frequency = targetFrequency;
-            }
-        }
-    }
-
-    //
-    //  Let the ocillators run
-    //
+    
+    //  Update all oscillators using the new frequency
     const auto oscValue = oscillatorsProcess(frequency);
 
+    //  If we have a tracer, trace the current state
     if (tracer != nullptr) {
         tracer->trace(startFrequencyRange, targetFrequency, in_state, state,
                     animationLfoValue, shapedAnimationValue, animationFreq, frequency, oscValue);

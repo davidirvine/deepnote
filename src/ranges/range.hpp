@@ -21,19 +21,37 @@ public:
         high(other.high)
     {}
 
-    void operator=(const Range& other) 
+    Range& operator=(const Range& other) 
     {
-        low = other.low;
-        high = other.high;
+        if (this != &other)
+        {
+            low = other.low;
+            high = other.high;
+        }
+        return *this;
     }
     
-    float getLow() const { return low; }
-    float getHigh() const { return high;}
-    
-    float length() const { return high - low; }
-    bool contains(float value) const { return value >= low && value <= high; }
+    float GetLow() const 
+    { 
+        return low; 
+    }
 
-    float constrain(float value) const 
+    float GetHigh() const 
+    { 
+        return high;
+    }
+    
+    float Length() const 
+    { 
+        return high - low; 
+    }
+
+    bool Contains(float value) const 
+    {
+        return value >= low && value <= high; 
+    }
+
+    float Constrain(float value) const 
     {
         if (value < low) return low;
         if (value > high) return high;

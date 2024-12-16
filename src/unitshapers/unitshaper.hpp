@@ -8,8 +8,8 @@ namespace deepnote
 //
 class UnitShaper 
 {
-    public:
-        virtual float shape(const float value) = 0;
+public:
+    virtual float Shape(const float value) = 0;
 };
 
 } // namespace deepnote
