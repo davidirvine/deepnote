@@ -1,9 +1,9 @@
 #pragma once
 
 #include "daisysp.h"
-#include "range.hpp"
-#include "scaler.hpp"
-#include "bezier.hpp"
+#include "ranges/range.hpp"
+#include "ranges/scaler.hpp"
+#include "unitshapers/bezier.hpp"
 
 namespace deepnote 
 {

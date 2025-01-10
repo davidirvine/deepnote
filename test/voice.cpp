@@ -1,6 +1,6 @@
-#include "deepnotevoice.hpp"
-#include "deepnotevoice_impl.hpp"
-#include "range.hpp"
+#include "voice/deepnotevoice.hpp"
+#include "voice/deepnotevoice_impl.hpp"
+#include "ranges/range.hpp"
 #include <doctest/doctest.h>
 #include <random>
 #include <iostream>

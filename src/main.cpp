@@ -9,8 +9,8 @@
 
 #include "daisy_seed.h"
 #include "daisysp.h"
-#include "deepnotevoice.hpp"
-#include "range.hpp"
+#include "voice/deepnotevoice.hpp"
+#include "ranges/range.hpp"
 
 #include "Filters/moogladder.h"
 

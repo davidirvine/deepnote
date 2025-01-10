@@ -1,8 +1,6 @@
 set(TARGET deepnote)
 
-set(SOURCES 
-    main.cpp
-)
+set(SOURCES main.cpp)
 
 add_executable(${TARGET} ${SOURCES})
 
@@ -21,9 +19,7 @@ target_link_libraries(${TARGET} PRIVATE
 )
 
 include_directories(
-    ranges
-    unitshapers
-    voice
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     ${DAISYSP_DIR}/Source
     ${DAISYSP_DIR}/Source/Utility
     ${DAISYSP_DIR}/DaisySP-LGPL/Source

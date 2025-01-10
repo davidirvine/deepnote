@@ -1,7 +1,7 @@
 #pragma once
 
 #include "deepnotevoice.hpp"
-#include "scaler.hpp"
+#include "ranges/scaler.hpp"
 
 namespace deepnote
 {

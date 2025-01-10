@@ -1,4 +1,4 @@
-#include "bezier.hpp"
+#include "unitshapers/bezier.hpp"
 #include <doctest/doctest.h>
 
 
