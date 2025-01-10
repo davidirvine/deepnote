@@ -4,6 +4,6 @@
 
 TEST_CASE("LinearUnitShaper::shape") {
     deepnote::LinearUnitShaper linear;
-    CHECK(linear.shape(0.0) == 0);
-    CHECK(linear.shape(1.0) == 1);
+    CHECK(linear.Shape(0.0) == 0);
+    CHECK(linear.Shape(1.0) == 1);
 }

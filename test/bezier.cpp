@@ -4,6 +4,6 @@
 
 TEST_CASE("BezierUnitShaper::shape") {
     deepnote::BezierUnitShaper bezier(0.0, 1.0);
-    CHECK(bezier.shape(0.0) == 0);
-    CHECK(bezier.shape(1.0) == 1);
+    CHECK(bezier.Shape(0.0) == 0);
+    CHECK(bezier.Shape(1.0) == 1);
 }

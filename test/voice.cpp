@@ -35,7 +35,7 @@ struct OfstreamCsvTrace {
         static uint64_t index = 0;
         out << std::fixed << std::setprecision(4) 
             << ++index 
-            << ", " << startRange.getLow() << ", " << startRange.getHigh() 
+            << ", " << startRange.GetLow() << ", " << startRange.GetHigh() 
             << ", " << targetFreq 
             << ", " << in_state 
             << ", " << out_state
