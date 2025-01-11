@@ -1,24 +1,28 @@
 #pragma once
 
 #include "range.hpp"
+#include "util/namedtype.hpp"
 
 namespace deepnote 
 {
+
+using InputRange = NamedType<Range, struct InputRangeTag>;
+using OutputRange = NamedType<Range, struct OutputRangeTag>;
 
 class Scaler 
 {
 public:
     Scaler() : 
-        input(Range(0.0, 1.0)), 
-        output(Range(0.0, 1.0)) 
+        input(Range(RangeLow(0.0), RangeHigh(1.0))), 
+        output(Range(RangeLow(0.0), RangeHigh(1.0))) 
     {}
 
-    Scaler(const Range input, const Range output) : 
-        input(input), 
-        output(output) 
+    Scaler(const InputRange input, const OutputRange output) : 
+        input(input.get()), 
+        output(output.get()) 
     {}
 
-    Scaler(const Range input) : Scaler(input, Range(0.0, 1.0)) 
+    Scaler(const InputRange input) : Scaler(input, OutputRange(Range(RangeLow(0.0), RangeHigh(1.0)))) 
     {}
     
     Scaler(const Scaler& other) : 
@@ -36,7 +40,7 @@ public:
         return *this;
     }
 
-    float Scale(const float value) const 
+    float operator()(const float value) const 
     {
         //
         //  normalize the input value to a range between 0.0 and 1.0

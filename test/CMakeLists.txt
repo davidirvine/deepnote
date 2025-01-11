@@ -2,9 +2,7 @@ cmake_minimum_required(VERSION 3.31)
 project(deepnote-test)
 
 include_directories( 
-    ../src/unitshapers
-    ../src/ranges
-    ../src/voice
+    ../src
     ../thirdparty
     ../thirdparty/DaisySP/Source
     ../thirdparty/DaisySP/Source/Utility

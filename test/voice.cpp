@@ -1,15 +1,15 @@
-#include "deepnotevoice.hpp"
-#include "deepnotevoice_impl.hpp"
-#include "range.hpp"
+#include "voice/deepnotevoice.hpp"
+#include "ranges/range.hpp"
 #include <doctest/doctest.h>
 #include <random>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <memory>
 
 
 struct StdLibRandomFloatGenerator {
-    float GetFloat(float low, float high) {
+    float operator()(float low, float high) {
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<> dis(low, high);
@@ -17,94 +17,123 @@ struct StdLibRandomFloatGenerator {
     }
 };
 
-struct OfstreamCsvTrace {
+struct OfstreamCsvTraceFunctor {
 
-    ~OfstreamCsvTrace() {
-        out.close();
+    OfstreamCsvTraceFunctor() = default;
+
+    OfstreamCsvTraceFunctor(const std::string& filename) 
+    {
+        open(filename);
     }
 
-    void open(const std::string& filename) {
-        out.open(filename);
-        out << "index, start_low, start_high, targetFreq, in_state, out_state, animationLfo, shapedAnimation, animationFreq, frequency, oscValue" << std::endl;
+    OfstreamCsvTraceFunctor(OfstreamCsvTraceFunctor&& other)
+    {
+        out.reset(other.out.get());
+        other.out.release();
+    }
+    
+    OfstreamCsvTraceFunctor& operator=(OfstreamCsvTraceFunctor&& other) 
+    {
+        if (this != &other) {
+            close();
+            out.reset(other.out.get());
+            other.out.release();
+        }
+        return *this;
     }
 
-    void trace(const deepnote::Range startRange, const float targetFreq, const int in_state, const int out_state, 
-        const float animationLfo_value, const float shapedAnimationValue, const float animationFreq,
-        const float frequency, const float oscValue) 
+    void close() 
+    {
+        if (out != nullptr) {
+            out->close();
+            out.release();
+        }
+    }
+
+    void open(const std::string& filename) 
+    {
+        close();
+        out.reset(new std::ofstream(filename));
+        (*out) << "index, start_low, start_high, targetFreq, in_state, out_state, animationLfo, shapedAnimation, animationFreq, frequency, oscValue" << std::endl;
+    }
+
+    void operator()(const deepnote::TraceValues& values)
     {
         static uint64_t index = 0;
-        out << std::fixed << std::setprecision(4) 
+        (*out) << std::fixed << std::setprecision(4) 
             << ++index 
-            << ", " << startRange.getLow() << ", " << startRange.getHigh() 
-            << ", " << targetFreq 
-            << ", " << in_state 
-            << ", " << out_state
-            << ", " << animationLfo_value 
-            << ", " << shapedAnimationValue 
-            << ", " << animationFreq 
-            << ", " << frequency 
-            << ", " << oscValue 
+            << ", " << values.startRange.GetLow() << ", " << values.startRange.GetHigh() 
+            << ", " << values.targetFreq 
+            << ", " << values.in_state 
+            << ", " << values.out_state
+            << ", " << values.animationLfo_value 
+            << ", " << values.shapedAnimationValue 
+            << ", " << values.animationFreq 
+            << ", " << values.frequency 
+            << ", " << values.oscValue 
             << std::endl;
     }
 
     private:
-        std::ofstream out;
+        std::unique_ptr<std::ofstream> out;
 };
 
-using TestVoiceType = deepnote::DeepnoteVoice<StdLibRandomFloatGenerator, 2, OfstreamCsvTrace>;
+
+
+using TestVoiceType = deepnote::DeepnoteVoice<2>;
 
 TEST_CASE("DeepnoteVoice log single cycle") {
     const float sampleRate{48000};
-    const deepnote::Range startFrequencyRange{200.0f, 400.0f};
+    const deepnote::Range startFrequencyRange{deepnote::RangeLow(200.0f), deepnote::RangeHigh(400.0f)};
     const float targetFrequency{20000.0f};
 
-    OfstreamCsvTrace trace;
-    trace.open("./single_cycle.csv");
-
+    OfstreamCsvTraceFunctor traceFunctor("./single_cycle.csv");
+    StdLibRandomFloatGenerator randomFunctor;
     TestVoiceType voice(startFrequencyRange, targetFrequency);
-    voice.SetTracer(&trace);
 
-    voice.Init(sampleRate, 1.0f);
+    voice.Init(sampleRate, 1.0f, deepnote::make_named<deepnote::RandomFunctorT>(randomFunctor));
     voice.TransitionToTarget();
+    auto typedTraceFunctor = deepnote::make_named<deepnote::TraceFunctorT>([&traceFunctor](deepnote::TraceValues values){traceFunctor(values);});
     for (int i = 0; i < sampleRate; i++) {
-        voice.Process();
+        voice.Process(typedTraceFunctor);
     }
 }
 
 TEST_CASE("DeepnoteVoice log single cycle target frequency is less than start frequency") {
     const float sampleRate{48000};
-    const deepnote::Range startFrequencyRange{200.0f, 400.0f};
+    const deepnote::Range startFrequencyRange{deepnote::RangeLow(200.0f), deepnote::RangeHigh(400.0f)};
     const float targetFrequency{100.0f};
 
-    OfstreamCsvTrace trace;
-    trace.open("./single_cycle-backwards.csv");
-
+    OfstreamCsvTraceFunctor traceFunctor("./single_cycle-backwards.csv");
+    StdLibRandomFloatGenerator randomFunctor;
     TestVoiceType voice(startFrequencyRange, targetFrequency);
-    voice.SetTracer(&trace);
 
-    voice.Init(sampleRate, 1.0f);
+    voice.Init(sampleRate, 1.0f, deepnote::make_named<deepnote::RandomFunctorT>(randomFunctor));
     voice.TransitionToTarget();
+
+    auto typedTraceFunctor = deepnote::make_named<deepnote::TraceFunctorT>([&traceFunctor](deepnote::TraceValues values){traceFunctor(values);});
+    
     for (int i = 0; i < sampleRate; i++) {
-        voice.Process();
+        voice.Process(typedTraceFunctor);
     }
 }
 
-
 TEST_CASE("DeepnoteVoice log multi cycle") {
     const int sampleRate{48000};
-    const deepnote::Range startFrequencyRange{200.0f, 400.0f};
+    const deepnote::Range startFrequencyRange{deepnote::RangeLow(200.0f), deepnote::RangeHigh(400.0f)};
     const float targetFrequency{20000.0f};
 
-    OfstreamCsvTrace trace;
-    trace.open("./multi_cycle.csv");
-
+    StdLibRandomFloatGenerator randomFunctor;
+    OfstreamCsvTraceFunctor traceFunctor("./multi_cycle.csv");
     TestVoiceType voice(startFrequencyRange, targetFrequency);
-    voice.SetTracer(&trace);
 
-    voice.Init(sampleRate, 1.0f);
+    voice.Init(sampleRate, 1.0f, deepnote::make_named<deepnote::RandomFunctorT>(randomFunctor));
     voice.TransitionToTarget();
+
+    auto typedTraceFunctor = deepnote::make_named<deepnote::TraceFunctorT>([&traceFunctor](deepnote::TraceValues values){traceFunctor(values);});
+    
     for (int i = 0; i < sampleRate * 4; i++) {
-        voice.Process();
+        voice.Process(typedTraceFunctor);
         if (voice.IsAtTarget()) {
             voice.TransitionToStart();
         } else if (voice.IsAtStart()) {
