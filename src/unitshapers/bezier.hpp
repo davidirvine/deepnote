@@ -1,18 +1,21 @@
 #pragma once
-
-#include "unitshaper.hpp"
     
+#include "util/namedtype.hpp"
+
 namespace deepnote 
 {
     
-class BezierUnitShaper : public UnitShaper 
+using ControlPoint1 = NamedType<float, struct ControlPoint1Tag>;
+using ControlPoint2 = NamedType<float, struct ControlPoint2Tag>;
+
+class BezierUnitShaper
 {
 public:
     BezierUnitShaper() = default;
 
-    BezierUnitShaper(const float y2, const float y3) :
-        y2(y2), 
-        y3(y3) 
+    BezierUnitShaper(const ControlPoint1 y2, const ControlPoint2 y3) :
+        y2(y2.get()), 
+        y3(y3.get()) 
     {}
 
     BezierUnitShaper(const BezierUnitShaper& other) :
@@ -30,7 +33,7 @@ public:
         return *this;
     }
 
-    float Shape(const float t) 
+    float operator()(const float t) const
     {
         float y = 
             (1-t) * (1-t) * y1 + 

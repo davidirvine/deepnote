@@ -1,14 +1,12 @@
 #pragma once
 
-#include "unitshaper.hpp"
-
 namespace deepnote 
 {
 
-class LinearUnitShaper : public UnitShaper 
+struct LinearUnitShaper
 {
 public:
-    float Shape(const float value) 
+    float operator()(const float value) const
     {
         return value;
     }

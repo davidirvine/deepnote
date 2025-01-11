@@ -1,7 +1,13 @@
 #pragma once
 
+#include "util/namedtype.hpp"
+
 namespace deepnote 
 {
+
+using RangeLow = NamedType<float, struct RangeLowTag>;
+using RangeHigh = NamedType<float, struct RangeHighTag>;
+
 
 class Range 
 {
@@ -11,9 +17,9 @@ public:
         high(0.f) 
     {}
 
-    Range(float low, float high) :
-        low(low < high ? low : high),
-        high(high > low ? high : low)
+    Range(RangeLow low, RangeHigh high) :
+        low(low.get() < high.get() ? low.get() : high.get()),
+        high(high.get() > low.get() ? high.get() : low.get())
     {}
 
     Range(const Range& other) :
