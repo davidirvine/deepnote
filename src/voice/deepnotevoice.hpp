@@ -8,13 +8,6 @@
 namespace deepnote 
 {
 
-template<typename Function>
-using RandomFunctorT = NamedType<Function, struct RandomFunctorParam>;
-
-template<typename Function>
-using TraceFunctorT = NamedType<Function, struct TraceFunctorParam>;
-
-
 struct TraceValues
 {
     TraceValues(const Range startRange, const float targetFreq, const int in_state, const int out_state, 
@@ -42,9 +35,7 @@ struct TraceValues
     float oscValue;
 };
 
-//
-//  NoopTrace
-//
+
 struct NoopTrace 
 {
     inline void operator()(const TraceValues& values) const
@@ -52,10 +43,6 @@ struct NoopTrace
 };
 
 
-
-//
-//  DeepnoteVoice
-//
 template <size_t numOscillators = 1>
 class DeepnoteVoice 
 {
@@ -88,10 +75,10 @@ public:
     ~DeepnoteVoice() 
     {}
 
-    template<typename Function>
-    void Init(const float sampleRate, const float animationRate, RandomFunctorT<Function> random)
+    template<typename F>
+    void Init(const float sampleRate, const float animationRate, const F& random)
     {
-        startFrequency = random.get()(startFrequencyRange.GetLow(), startFrequencyRange.GetHigh());
+        startFrequency = random(startFrequencyRange.GetLow(), startFrequencyRange.GetHigh());
         validFrequencyRange = Range(
             RangeLow(startFrequency < targetFrequency ? startFrequencyRange.GetLow() : startFrequencyRange.GetHigh()), 
             RangeHigh(targetFrequency));
@@ -108,8 +95,8 @@ public:
         initOscillators(sampleRate, daisysp::Oscillator::WAVE_POLYBLEP_SAW, startFrequency, DEFAULT_DETUNE_INCREMENT);
     }
     
-    template<typename Function>
-    float Process(TraceFunctorT<Function> traceFunctor)
+    template<typename F>
+    float Process(const F& traceFunctor)
     {
         const auto in_state{state};
         //  if we in a pending state, reset the animation LFO and move to the next state
@@ -206,7 +193,7 @@ public:
         const auto oscValue = oscillatorsProcess(frequency);
 
         //  Give the traceFunctor a chance to log the state of the voice
-        traceFunctor.get()(TraceValues(startFrequencyRange, targetFrequency, in_state, state,
+        traceFunctor(TraceValues(startFrequencyRange, targetFrequency, in_state, state,
                         animationLfoValue, shapedAnimationValue, animationFreq, frequency, oscValue));
 
         return oscValue;
