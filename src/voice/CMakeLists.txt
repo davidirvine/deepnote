@@ -1,6 +1,5 @@
 add_library(voice_inf INTERFACE
   deepnotevoice.hpp
-  deepnotevoice_impl.hpp
 )
 
 target_include_directories(voice_inf INTERFACE 

@@ -16,11 +16,4 @@ private:
     T value_;
 };
 
-
-template<template<typename T> class GenericTypeName, typename T>
-GenericTypeName<T> make_named(const T& value) 
-{
-    return GenericTypeName<T>(value);
-}
-
 } // namespace deepnote
