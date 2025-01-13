@@ -1,6 +1,6 @@
 #pragma once
 
-#include "daisysp.h"
+#include "Synthesis/oscillator.h"
 #include "ranges/range.hpp"
 #include "ranges/scaler.hpp"
 #include "unitshapers/bezier.hpp"
