@@ -8,11 +8,15 @@
 //
 
 #include "daisy_seed.h"
-#include "daisysp.h"
+#include "voice/frequencytable.hpp"
 #include "voice/deepnotevoice.hpp"
 #include "ranges/range.hpp"
-
 #include "Filters/moogladder.h"
+#include "per/rng.h"
+#include "util/namedtype.hpp"
+#include "daisy_core.h"
+
+namespace types = deepnote::nt;
 
 //	deepnotedrone::LibDaisyRandom is a random number generator 
 //	that uses the libDaisy random number generator.
@@ -29,23 +33,15 @@ struct LibDaisyRandom
 //
 using DuoVoiceType = deepnote::DeepnoteVoice<2>;
 using TrioVoiceType = deepnote::DeepnoteVoice<3>;
+const auto START_FREQ_RANGE = types::OscillatorFrequencyRange(deepnote::Range(
+		types::RangeLow(200.f), 
+		types::RangeHigh(400.f)
+));
+const deepnote::Range ANIMATION_RATE_RANGE(types::RangeLow(0.05f), types::RangeHigh(1.5f));
 
-const deepnote::Range START_FREQ_RANGE{deepnote::RangeLow(200.f), deepnote::RangeHigh(400.f)};
-
-TrioVoiceType trioVoices[4] = {
-	{ START_FREQ_RANGE, 1396.91 },
-	{ START_FREQ_RANGE, 1174.66 },
-	{ START_FREQ_RANGE, 659.25 },
-	{ START_FREQ_RANGE, 587.33 }
-};
-
-DuoVoiceType duoVoices[5] = {
- 	{ START_FREQ_RANGE, 440.00 },
- 	{ START_FREQ_RANGE, 146.83 },
- 	{ START_FREQ_RANGE, 110.0 },
- 	{ START_FREQ_RANGE, 73.42 },
- 	{ START_FREQ_RANGE, 36.71 }
-};
+TrioVoiceType trioVoices[deepnote::NUM_TRIO_VOICES];
+DuoVoiceType duoVoices[deepnote::NUM_DUO_VOICES];
+deepnote::FrequencyTable voiceFrequencies;
 
 enum AdcChannelId 
 {
@@ -61,23 +57,40 @@ auto valueFilterCutoff{0.f};
 auto valueVolume{0.f};
 bool valueTravelSelector{false};
 
-const deepnote::Range animationRateRange{deepnote::RangeLow(0.05f), deepnote::RangeHigh(1.5f)};
+const deepnote::Range animationRateRange{types::RangeLow(0.05f), types::RangeHigh(1.5f)};
 daisysp::MoogLadder filter;
 
 void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::OutputBuffer out, size_t bufferSize)
 {
-	const deepnote::NoopTrace traceFunctor;
 	filter.SetFreq(valueFilterCutoff);
+
+	//	TODO: read the index and detune from potentiometers
+	const auto indexChanged = voiceFrequencies.setCurrentIndex(types::FrequencyTableIndex(1));
+	const auto detune = types::DetuneHz(valueDetune);
+	const auto animationMultiplier = types::AnimationMultiplier(1.f);
+	const auto cp1 = types::ControlPoint1(0.08f);
+	const auto cp2 = types::ControlPoint2(0.5f);
+	const auto traceFunctor = deepnote::NoopTrace();
 
 	for (size_t bufferIndex = 0; bufferIndex < bufferSize; bufferIndex++) {
 		auto output{0.f};
+		auto index{0};
 		for (auto& voice : trioVoices) {
-			voice.computeDetune(valueDetune);
-			output += (voice.Process(traceFunctor) * valueVolume);
+			voice.computeDetune(detune);
+			if (indexChanged)
+			{
+				voice.SetTargetFrequency(voiceFrequencies.getFrequency(types::VoiceIndex(index++)));
+			}
+			output += voice.Process(animationMultiplier, cp1, cp2, traceFunctor);
 		}
+		
 		for (auto& voice : duoVoices) {
-			voice.computeDetune(valueDetune);
-			output += (voice.Process(traceFunctor) * valueVolume);
+			voice.computeDetune(detune);
+			if (indexChanged)
+			{
+				voice.SetTargetFrequency(voiceFrequencies.getFrequency(types::VoiceIndex(index++)));
+			}
+			output += voice.Process(animationMultiplier, cp1, cp2, traceFunctor);
 		}
 
 		output = filter.Process(output);
@@ -86,6 +99,7 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 		out[1][bufferIndex] = output;
 	}
 }
+
 
 
 
@@ -130,21 +144,31 @@ int main(void)
 		daisy::GPIO::Pull::PULLUP);
 
 
-	const LibDaisyRandom randomFunctor;
+	const LibDaisyRandom random;
+	auto index{0};
+	voiceFrequencies.initialize(START_FREQ_RANGE, random);
 
 	//
 	//	initialize the voices
 	//
 	for (auto& voice : trioVoices) 
 	{
-		const auto startFrequency = randomFunctor(animationRateRange.GetLow(), animationRateRange.GetHigh());
-		voice.Init(sample_rate, startFrequency, randomFunctor);
+		voice.Init(
+			voiceFrequencies.getFrequency(types::VoiceIndex(index++)),
+			types::SampleRate(sample_rate), 
+			types::OscillatorFrequency(random(ANIMATION_RATE_RANGE.GetLow().get(), ANIMATION_RATE_RANGE.GetHigh().get())), 
+			random
+		);
 	}
 
 	for (auto& voice : duoVoices) 
 	{
-		const auto startFrequency = randomFunctor(animationRateRange.GetLow(), animationRateRange.GetHigh());
-		voice.Init(sample_rate, startFrequency,  randomFunctor);
+		voice.Init(
+			voiceFrequencies.getFrequency(types::VoiceIndex(index++)),
+			types::SampleRate(sample_rate), 
+			types::OscillatorFrequency(random(ANIMATION_RATE_RANGE.GetLow().get(), ANIMATION_RATE_RANGE.GetHigh().get())), 
+			random
+		);
 	}
 
 	filter.Init(sample_rate);
@@ -158,20 +182,20 @@ int main(void)
 
 	//	Loop forever performing non real-time tasks
 	while(1) {
-		const deepnote::Range OSC_FREQ_RANGE{deepnote::RangeLow(10.f), deepnote::RangeHigh(2000.f)};
-		const deepnote::Range FILTER_FREQ_RANGE{deepnote::RangeLow(500.f), deepnote::RangeHigh(15000.f)};
-		const deepnote::Range DETUNE_RANGE{deepnote::RangeLow(0.f), deepnote::RangeHigh(5.f)};
+		const deepnote::Range OSC_FREQ_RANGE{types::RangeLow(10.f), types::RangeHigh(2000.f)};
+		const deepnote::Range FILTER_FREQ_RANGE{types::RangeLow(500.f), types::RangeHigh(15000.f)};
+		const deepnote::Range DETUNE_RANGE{types::RangeLow(0.f), types::RangeHigh(5.f)};
 
 		valueDetune = daisysp::fmap(
 			hw.adc.GetFloat(DETUNE), 
-			DETUNE_RANGE.GetLow(), 
-			DETUNE_RANGE.GetHigh(), 
+			DETUNE_RANGE.GetLow().get(), 
+			DETUNE_RANGE.GetHigh().get(), 
 			daisysp::Mapping::LINEAR);
 
 		valueFilterCutoff = daisysp::fmap(
 			hw.adc.GetFloat(FILTER_CUTOFF), 
-			FILTER_FREQ_RANGE.GetLow(), 
-			FILTER_FREQ_RANGE.GetHigh(), 
+			FILTER_FREQ_RANGE.GetLow().get(), 
+			FILTER_FREQ_RANGE.GetHigh().get(), 
 			daisysp::Mapping::LINEAR);
 
 		valueVolume = daisysp::fmap(
@@ -179,22 +203,6 @@ int main(void)
 			0.f, 
 			1.f, 
 			daisysp::Mapping::LINEAR);
-
-		const bool rawState = travelSelector.RawState();
-		if (rawState != valueTravelSelector) {
-			valueTravelSelector = rawState;
-			for (auto& voice : trioVoices) 
-			{
-				valueTravelSelector ? voice.TransitionToTarget() : voice.TransitionToStart();
-				voice.SetAnimationRate(randomFunctor(animationRateRange.GetLow(), animationRateRange.GetHigh()));
-			}
-
-			for (auto& voice : duoVoices) 
-			{
-				valueTravelSelector ? voice.TransitionToTarget() : voice.TransitionToStart();
-				voice.SetAnimationRate(randomFunctor(animationRateRange.GetLow(), animationRateRange.GetHigh()));
-			}
-		}
 
 		hw.PrintLine("Detune " FLT_FMT3, FLT_VAR3(valueDetune));
 		hw.PrintLine("Cutoff " FLT_FMT3, FLT_VAR3(valueFilterCutoff));

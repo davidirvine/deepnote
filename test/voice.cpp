@@ -8,6 +8,8 @@
 #include <memory>
 
 
+namespace types = deepnote::nt;
+
 struct StdLibRandomFloatGenerator {
     float operator()(float low, float high) const {
         std::random_device rd;
@@ -43,7 +45,7 @@ struct OfstreamCsvTraceFunctor {
     {
         close();
         out.reset(new std::ofstream(filename));
-        (*out) << "index, start_low, start_high, targetFreq, in_state, out_state, animationLfo, shapedAnimation, animationFreq, frequency, oscValue" << std::endl;
+        (*out) << "index, startFreq, targetFreq, currentFreq, in_state, out_state, animationLfo, shapedAnimation, animationFreq, oscValue" << std::endl;
     }
 
     void operator()(const deepnote::TraceValues& values) const
@@ -51,14 +53,14 @@ struct OfstreamCsvTraceFunctor {
         static uint64_t index = 0;
         (*out) << std::fixed << std::setprecision(4) 
             << ++index 
-            << ", " << values.startRange.GetLow() << ", " << values.startRange.GetHigh() 
+            << ", " << values.startFreq
             << ", " << values.targetFreq 
+            << ", " << values.currentFrequency 
             << ", " << values.in_state 
             << ", " << values.out_state
             << ", " << values.animationLfo_value 
             << ", " << values.shapedAnimationValue 
             << ", " << values.animationFreq 
-            << ", " << values.frequency 
             << ", " << values.oscValue 
             << std::endl;
     }
@@ -72,56 +74,143 @@ struct OfstreamCsvTraceFunctor {
 using TestVoiceType = deepnote::DeepnoteVoice<2>;
 
 TEST_CASE("DeepnoteVoice log single cycle") {
-    const float sampleRate{48000};
-    const deepnote::Range startFrequencyRange{deepnote::RangeLow(200.0f), deepnote::RangeHigh(400.0f)};
-    const float targetFrequency{20000.0f};
+    SUBCASE("startFrequency < targetFrequency") {
+        const StdLibRandomFloatGenerator randomFunctor;
+        const OfstreamCsvTraceFunctor traceFunctor("./single_cycle_ascending.csv");
+        const auto sampleRate = types::SampleRate(48000);
+        TestVoiceType voice;
 
-    const OfstreamCsvTraceFunctor traceFunctor("./single_cycle.csv");
-    const StdLibRandomFloatGenerator randomFunctor;
-    TestVoiceType voice(startFrequencyRange, targetFrequency);
+        voice.Init(
+            types::OscillatorFrequency(400.f),
+            sampleRate,
+            types::OscillatorFrequency(1.f),
+            randomFunctor
+        );
+        
+        voice.SetTargetFrequency(types::OscillatorFrequency(20000.f));
 
-    voice.Init(sampleRate, 1.0f, randomFunctor);
-    voice.TransitionToTarget();
-    for (int i = 0; i < sampleRate; i++) {
-        voice.Process(traceFunctor);
+        CHECK(!voice.IsAtTarget());
+        for (int i = 0; i < sampleRate.get(); i++) {
+            voice.Process(
+                types::AnimationMultiplier(1.f),
+                types::ControlPoint1(0.08f),
+                types::ControlPoint2(0.5f),
+                traceFunctor);
+        }
+        CHECK(voice.IsAtTarget());
+    }
+
+    SUBCASE("startFrequency > targetFrequency") {
+        const StdLibRandomFloatGenerator randomFunctor;
+        const OfstreamCsvTraceFunctor traceFunctor("./single_cycle_decending.csv");
+        const types::SampleRate sampleRate{48000};
+        TestVoiceType voice;
+        
+        voice.Init(
+            types::OscillatorFrequency(20000.f),
+            sampleRate,
+            types::OscillatorFrequency(1.f),
+            randomFunctor
+        );
+
+        voice.SetTargetFrequency(types::OscillatorFrequency(400.f));
+        
+        CHECK(!voice.IsAtTarget());
+        for (int i = 0; i < sampleRate.get(); i++) {
+            voice.Process(
+                types::AnimationMultiplier(1.f),
+                types::ControlPoint1(0.08f),
+                types::ControlPoint2(0.5f),
+                traceFunctor);
+        }
+        CHECK(voice.IsAtTarget());
     }
 }
 
-TEST_CASE("DeepnoteVoice log single cycle target frequency is less than start frequency") {
-    const float sampleRate{48000};
-    const deepnote::Range startFrequencyRange{deepnote::RangeLow(200.0f), deepnote::RangeHigh(400.0f)};
-    const float targetFrequency{100.0f};
-
-    const OfstreamCsvTraceFunctor traceFunctor("./single_cycle-backwards.csv");
-    const StdLibRandomFloatGenerator randomFunctor;
-    TestVoiceType voice(startFrequencyRange, targetFrequency);
-
-    voice.Init(sampleRate, 1.0f, randomFunctor);
-    voice.TransitionToTarget();
-
-    for (int i = 0; i < sampleRate; i++) {
-        voice.Process(traceFunctor);
-    }
-}
-
-TEST_CASE("DeepnoteVoice log multi cycle") {
-    const int sampleRate{48000};
-    const deepnote::Range startFrequencyRange{deepnote::RangeLow(200.0f), deepnote::RangeHigh(400.0f)};
-    const float targetFrequency{20000.0f};
-
+TEST_CASE("DeepnoteVoice log multiple cycles and targets") {
     const StdLibRandomFloatGenerator randomFunctor;
     const OfstreamCsvTraceFunctor traceFunctor("./multi_cycle.csv");
-    TestVoiceType voice(startFrequencyRange, targetFrequency);
+    const types::SampleRate sampleRate{48000};
+    TestVoiceType voice;
+    
+    voice.Init(
+        types::OscillatorFrequency(20000.f),
+        sampleRate,
+        types::OscillatorFrequency(1.f),
+        randomFunctor
+    );
 
-    voice.Init(sampleRate, 1.0f, randomFunctor);
-    voice.TransitionToTarget();
-
-    for (int i = 0; i < sampleRate * 4; i++) {
-        voice.Process(traceFunctor);
-        if (voice.IsAtTarget()) {
-            voice.TransitionToStart();
-        } else if (voice.IsAtStart()) {
-            voice.TransitionToTarget();
-        }
+    voice.SetTargetFrequency(types::OscillatorFrequency(400.f));
+    
+    CHECK(!voice.IsAtTarget());
+    for (int i = 0; i < sampleRate.get(); i++) {
+        voice.Process(
+            types::AnimationMultiplier(1.f),
+            types::ControlPoint1(0.08f),
+            types::ControlPoint2(0.5f),
+            traceFunctor);
     }
+    CHECK(voice.IsAtTarget());
+
+    voice.SetTargetFrequency(types::OscillatorFrequency(10000.f));
+
+    CHECK(!voice.IsAtTarget());
+    for (int i = 0; i < sampleRate.get(); i++) {
+    voice.Process(
+        types::AnimationMultiplier(1.f),
+        types::ControlPoint1(0.08f),
+        types::ControlPoint2(0.5f),
+        traceFunctor);
+    }
+    CHECK(voice.IsAtTarget());
+    
+    voice.SetTargetFrequency(types::OscillatorFrequency(6000.f));
+
+    CHECK(!voice.IsAtTarget());
+    for (int i = 0; i < sampleRate.get(); i++) {
+    voice.Process(
+        types::AnimationMultiplier(1.f),
+        types::ControlPoint1(0.08f),
+        types::ControlPoint2(0.5f),
+        traceFunctor);
+    }
+    CHECK(voice.IsAtTarget());
+}
+
+TEST_CASE("DeepnoteVoice log target changed mid cycle") {
+    const StdLibRandomFloatGenerator randomFunctor;
+    const OfstreamCsvTraceFunctor traceFunctor("./target_change_mid_cycle.csv");
+    const types::SampleRate sampleRate{48000};
+    TestVoiceType voice;
+    
+    voice.Init(
+        types::OscillatorFrequency(20000.f),
+        sampleRate,
+        types::OscillatorFrequency(1.f),
+        randomFunctor
+    );
+
+    voice.SetTargetFrequency(types::OscillatorFrequency(400.f));
+    
+    CHECK(!voice.IsAtTarget());
+    for (int i = 0; i < sampleRate.get() / 2; i++) {
+        voice.Process(
+            types::AnimationMultiplier(1.f),
+            types::ControlPoint1(0.08f),
+            types::ControlPoint2(0.5f),
+            traceFunctor);
+    }
+    CHECK(!voice.IsAtTarget());
+
+    voice.SetTargetFrequency(types::OscillatorFrequency(10000.f));
+
+    CHECK(!voice.IsAtTarget());
+    for (int i = 0; i < sampleRate.get(); i++) {
+    voice.Process(
+        types::AnimationMultiplier(1.f),
+        types::ControlPoint1(0.08f),
+        types::ControlPoint2(0.5f),
+        traceFunctor);
+    }
+    CHECK(voice.IsAtTarget());
 }

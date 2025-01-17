@@ -6,23 +6,26 @@
 namespace deepnote 
 {
 
-using InputRange = NamedType<Range, struct InputRangeTag>;
-using OutputRange = NamedType<Range, struct OutputRangeTag>;
+namespace nt
+{
+    using InputRange = NamedType<Range, struct InputRangeTag>;
+    using OutputRange = NamedType<Range, struct OutputRangeTag>;
+};
 
 class Scaler 
 {
 public:
     Scaler() : 
-        input(Range(RangeLow(0.0), RangeHigh(1.0))), 
-        output(Range(RangeLow(0.0), RangeHigh(1.0))) 
+        input(Range(nt::RangeLow(0.0), nt::RangeHigh(1.0))), 
+        output(Range(nt::RangeLow(0.0), nt::RangeHigh(1.0))) 
     {}
 
-    Scaler(const InputRange input, const OutputRange output) : 
+    Scaler(const nt::InputRange input, const nt::OutputRange output) : 
         input(input.get()), 
         output(output.get()) 
     {}
 
-    Scaler(const InputRange input) : Scaler(input, OutputRange(Range(RangeLow(0.0), RangeHigh(1.0)))) 
+    Scaler(const nt::InputRange input) : Scaler(input, nt::OutputRange(Range(nt::RangeLow(0.0), nt::RangeHigh(1.0)))) 
     {}
     
     Scaler(const Scaler& other) : 
@@ -47,14 +50,14 @@ public:
         //  then scale it to the output range
         //  then offset it to the output start
         //
-        return (Normalize(value) * output.Length()) + output.GetLow();
+        return (Normalize(value) * output.Length()) + output.GetLow().get();
     }
 
 private:
 
     float Normalize(const float value) const 
     {
-        return (value - input.GetLow()) / input.Length();
+        return (value - input.GetLow().get()) / input.Length();
     }
 
     Range input;

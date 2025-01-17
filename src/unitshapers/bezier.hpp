@@ -5,15 +5,19 @@
 namespace deepnote 
 {
     
-using ControlPoint1 = NamedType<float, struct ControlPoint1Tag>;
-using ControlPoint2 = NamedType<float, struct ControlPoint2Tag>;
+
+namespace nt
+{
+    using ControlPoint1 = NamedType<float, struct ControlPoint1Tag>;
+    using ControlPoint2 = NamedType<float, struct ControlPoint2Tag>;
+};
 
 class BezierUnitShaper
 {
 public:
     BezierUnitShaper() = default;
 
-    BezierUnitShaper(const ControlPoint1 y2, const ControlPoint2 y3) :
+    BezierUnitShaper(const nt::ControlPoint1 y2, const nt::ControlPoint2 y3) :
         y2(y2.get()), 
         y3(y3.get()) 
     {}

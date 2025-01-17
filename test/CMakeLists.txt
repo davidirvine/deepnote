@@ -9,12 +9,14 @@ include_directories(
 )
 
 set(TESTS_SOUCES
-    main.cpp
     bezier.cpp
+    freqtable.cpp
     linear.cpp
+    main.cpp
     range.cpp
     scaler.cpp
     voice.cpp
+
 )
 
 add_executable(tests 

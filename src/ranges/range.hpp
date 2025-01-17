@@ -5,9 +5,11 @@
 namespace deepnote 
 {
 
-using RangeLow = NamedType<float, struct RangeLowTag>;
-using RangeHigh = NamedType<float, struct RangeHighTag>;
-
+namespace nt
+{
+    using RangeLow = NamedType<float, struct RangeLowTag>;
+    using RangeHigh = NamedType<float, struct RangeHighTag>;
+};
 
 class Range 
 {
@@ -17,7 +19,7 @@ public:
         high(0.f) 
     {}
 
-    Range(RangeLow low, RangeHigh high) :
+    Range(nt::RangeLow low, nt::RangeHigh high) :
         low(low.get() < high.get() ? low.get() : high.get()),
         high(high.get() > low.get() ? high.get() : low.get())
     {}
@@ -37,36 +39,36 @@ public:
         return *this;
     }
     
-    float GetLow() const 
+    nt::RangeLow GetLow() const 
     { 
         return low; 
     }
 
-    float GetHigh() const 
+    nt::RangeHigh GetHigh() const 
     { 
         return high;
     }
     
     float Length() const 
     { 
-        return high - low; 
+        return high.get() - low.get(); 
     }
 
     bool Contains(float value) const 
     {
-        return value >= low && value <= high; 
+        return value >= low.get() && value <= high.get(); 
     }
 
     float Constrain(float value) const 
     {
-        if (value < low) return low;
-        if (value > high) return high;
+        if (value < low.get()) return low.get();
+        if (value > high.get()) return high.get();
         return value;
     }
     
 private:
-    float low;
-    float high;
+    nt::RangeLow low;
+    nt::RangeHigh high;
 };
 
 } // namespace deepnote
