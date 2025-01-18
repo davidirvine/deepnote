@@ -214,3 +214,56 @@ TEST_CASE("DeepnoteVoice log target changed mid cycle") {
     }
     CHECK(voice.IsAtTarget());
 }
+
+
+
+TEST_CASE("DeepnoteVoice log target changed mid cycle then reset") {
+    const StdLibRandomFloatGenerator randomFunctor;
+    const OfstreamCsvTraceFunctor traceFunctor("./target_change_reset.csv");
+    const types::SampleRate sampleRate{48000};
+    TestVoiceType voice;
+    
+    voice.Init(
+        types::OscillatorFrequency(20000.f),
+        sampleRate,
+        types::OscillatorFrequency(1.f),
+        randomFunctor
+    );
+
+    voice.SetTargetFrequency(types::OscillatorFrequency(400.f));
+    
+    CHECK(!voice.IsAtTarget());
+    for (int i = 0; i < sampleRate.get() / 2; i++) {
+        voice.Process(
+            types::AnimationMultiplier(1.f),
+            types::ControlPoint1(0.08f),
+            types::ControlPoint2(0.5f),
+            traceFunctor);
+    }
+    CHECK(!voice.IsAtTarget());
+
+    voice.SetTargetFrequency(types::OscillatorFrequency(10000.f));
+
+    CHECK(!voice.IsAtTarget());
+    for (int i = 0; i < sampleRate.get() / 2; i++) {
+    voice.Process(
+        types::AnimationMultiplier(1.f),
+        types::ControlPoint1(0.08f),
+        types::ControlPoint2(0.5f),
+        traceFunctor);
+    }
+    CHECK(!voice.IsAtTarget());
+
+    voice.ResetStartFrequency(types::OscillatorFrequency(500.f));
+
+    CHECK(!voice.IsAtTarget());
+    for (int i = 0; i < sampleRate.get(); i++) {
+    voice.Process(
+        types::AnimationMultiplier(1.f),
+        types::ControlPoint1(0.08f),
+        types::ControlPoint2(0.5f),
+        traceFunctor);
+    }
+    CHECK(voice.IsAtTarget());
+
+}

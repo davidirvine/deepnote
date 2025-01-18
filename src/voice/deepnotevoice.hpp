@@ -212,6 +212,14 @@ public:
         this->state = PENDING_TRANSIT_TO_TARGET;
     }
 
+    void ResetStartFrequency(const nt::OscillatorFrequency& startFrequency) 
+    {
+        //  set up a new transit from a new start frequency
+        this->startFrequency = startFrequency;
+        this->currentFrequency = this->startFrequency;
+        this->state = PENDING_TRANSIT_TO_TARGET;
+    }
+
     void computeDetune(const nt::DetuneHz& detune)
     {
         const auto half = numOscillators / 2;
