@@ -41,6 +41,11 @@ struct FrequencyTable
         return changed;
     }
     
+    int getCurrentIndex() const
+    {
+        return currentIndex;
+    }
+
     nt::OscillatorFrequency getFrequency(const nt::VoiceIndex& index) const
     {
         return nt::OscillatorFrequency(frequencies[currentIndex][index.get() % NUM_VOICES]);
