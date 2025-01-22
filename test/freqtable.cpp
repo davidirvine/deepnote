@@ -22,11 +22,11 @@ TEST_CASE("FrequencyTable") {
     const types::OscillatorFrequencyRange startFrequencyRange(deepnote::Range(low, high));
     deepnote::FrequencyTable table;
     table.initialize(startFrequencyRange, randomFunctor);
-    table.setCurrentIndex(types::FrequencyTableIndex(0));
+    table.set_current_index(types::FrequencyTableIndex(0));
 
     for (int i = 0; i < deepnote::NUM_VOICES; ++i)
     {
-        const auto frequency = table.getFrequency(types::VoiceIndex(i));
+        const auto frequency = table.get_frequency(types::VoiceIndex(i));
         CHECK(frequency.get() >= low.get());
         CHECK(frequency.get() <= high.get());
     }

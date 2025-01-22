@@ -1,15 +1,15 @@
 #pragma once
 
-namespace deepnote 
+namespace deepnote
 {
 
-struct LinearUnitShaper
-{
-public:
-    float operator()(const float value) const
+    struct LinearUnitShaper
     {
-        return value;
-    }
-};
-    
-} // namespace deepnote 
+    public:
+        float operator()(const float value) const
+        {
+            return value;
+        }
+    };
+
+} // namespace deepnote
