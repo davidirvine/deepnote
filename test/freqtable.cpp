@@ -2,33 +2,36 @@
 #include <doctest/doctest.h>
 #include <random>
 
-
 namespace types = deepnote::nt;
 
-struct StdLibRandomFloatGenerator {
-    float operator()(float low, float high) const {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<> dis(low, high);
-        return dis(gen);
-    }
+struct StdLibRandomFloatGenerator
+{
+  float operator()(float low, float high) const
+  {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(low, high);
+    return dis(gen);
+  }
 };
 
-TEST_CASE("FrequencyTable") {
-  SUBCASE("FrequencyTable::Init") {
-    const StdLibRandomFloatGenerator randomFunctor;
+TEST_CASE("FrequencyTable")
+{
+  SUBCASE("FrequencyTable::Init")
+  {
+    const StdLibRandomFloatGenerator random_functor;
     const types::RangeLow low(200.0f);
     const types::RangeHigh high(400.0f);
-    const types::OscillatorFrequencyRange startFrequencyRange(deepnote::Range(low, high));
+    const types::OscillatorFrequencyRange start_frequency_range(deepnote::Range(low, high));
     deepnote::FrequencyTable table;
-    table.initialize(startFrequencyRange, randomFunctor);
+    table.initialize(start_frequency_range, random_functor);
     table.set_current_index(types::FrequencyTableIndex(0));
 
     for (int i = 0; i < deepnote::NUM_VOICES; ++i)
     {
-        const auto frequency = table.get_frequency(types::VoiceIndex(i));
-        CHECK(frequency.get() >= low.get());
-        CHECK(frequency.get() <= high.get());
+      const auto frequency = table.get_frequency(types::VoiceIndex(i));
+      CHECK(frequency.get() >= low.get());
+      CHECK(frequency.get() <= high.get());
     }
   }
 }
