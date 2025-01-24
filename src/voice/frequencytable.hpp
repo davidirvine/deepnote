@@ -37,7 +37,7 @@ namespace deepnote
             }
         }
 
-        bool set_current_index(const nt::FrequencyTableIndex &index)
+        bool set_current_index(const nt::FrequencyTableIndex index)
         {
             const bool changed = currentIndex != index.get();
             this->currentIndex = index.get() % NUM_TABLES;
@@ -49,12 +49,12 @@ namespace deepnote
             return currentIndex;
         }
 
-        nt::OscillatorFrequency get_frequency(const nt::VoiceIndex &index) const
+        nt::OscillatorFrequency get_frequency(const nt::VoiceIndex index) const
         {
             return nt::OscillatorFrequency(frequencies[currentIndex][index.get() % NUM_VOICES]);
         }
 
-        nt::OscillatorFrequency get_reset_frequency(const nt::VoiceIndex &index) const
+        nt::OscillatorFrequency get_reset_frequency(const nt::VoiceIndex index) const
         {
             return nt::OscillatorFrequency(frequencies[0][index.get() % NUM_VOICES]);
         }

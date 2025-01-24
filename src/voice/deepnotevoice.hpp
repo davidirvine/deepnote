@@ -64,8 +64,8 @@ namespace deepnote
         }
 
         template <typename F>
-        void init(const nt::OscillatorFrequency &start_frequency, const nt::SampleRate &sample_rate,
-                  const nt::OscillatorFrequency &animation_frequency, const F &random)
+        void init(const nt::OscillatorFrequency start_frequency, const nt::SampleRate sample_rate,
+                  const nt::OscillatorFrequency animation_frequency, const F &random)
         {
             this->start_frequency = start_frequency;
             this->target_frequency = start_frequency;
@@ -80,8 +80,8 @@ namespace deepnote
         }
 
         template <typename F>
-        float process(const nt::AnimationMultiplier &animation_multiplier,
-                      const nt::ControlPoint1 &cp1, const nt::ControlPoint2 &cp2, const F &trace_functor)
+        float process(const nt::AnimationMultiplier animation_multiplier,
+                      const nt::ControlPoint1 cp1, const nt::ControlPoint2 cp2, const F &trace_functor)
         {
             const auto in_state{state};
             //  if we in a pending state, reset the animation LFO and move to the next state
@@ -189,12 +189,12 @@ namespace deepnote
             return osc_value;
         }
 
-        void set_animation_rate(const nt::OscillatorFrequency &rate)
+        void set_animation_rate(const nt::OscillatorFrequency rate)
         {
             animation_lfo.SetFreq(rate.get());
         }
 
-        void set_target_frequency(const nt::OscillatorFrequency &target_frequency)
+        void set_target_frequency(const nt::OscillatorFrequency target_frequency)
         {
             //  set up a new transit from something close to the current frequency of
             //  the voice and the new target frequency
@@ -203,7 +203,7 @@ namespace deepnote
             this->state = PENDING_TRANSIT_TO_TARGET;
         }
 
-        void reset_start_frequency(const nt::OscillatorFrequency &start_frequency)
+        void reset_start_frequency(const nt::OscillatorFrequency start_frequency)
         {
             //  set up a new transit from a new start frequency
             this->start_frequency = start_frequency;
@@ -211,7 +211,7 @@ namespace deepnote
             this->state = PENDING_TRANSIT_TO_TARGET;
         }
 
-        void compute_detune(const nt::DetuneHz &detune)
+        void compute_detune(const nt::DetuneHz detune)
         {
             const auto half = num_oscillators / 2;
             for (size_t i = 0; i < num_oscillators; ++i)
@@ -235,8 +235,8 @@ namespace deepnote
         }
 
     private:
-        void init_oscillators(const nt::SampleRate &sample_rate, const uint8_t waveform,
-                              const nt::OscillatorFrequency &frequency, const nt::DetuneHz &detune)
+        void init_oscillators(const nt::SampleRate sample_rate, const uint8_t waveform,
+                              const nt::OscillatorFrequency frequency, const nt::DetuneHz detune)
         {
             for (auto &osc : oscillators)
             {
