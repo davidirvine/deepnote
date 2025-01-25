@@ -1,5 +1,3 @@
 build
 .DS_Store
-thirdparty/DaisySP
-thirdparty/libDaisy
 test/build
