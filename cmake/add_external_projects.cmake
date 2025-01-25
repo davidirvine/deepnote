@@ -5,6 +5,10 @@ find_program(MAKE_CMD NAMES gmake nmake make)
 ExternalProject_add(libDaisy 
     GIT_REPOSITORY "https://github.com/electro-smith/libDaisy.git"
     GIT_TAG "origin/master"
+    GIT_SHALLOW TRUE
+    GIT_PROGRESS TRUE
+    GIT_REMOTE_UPDATE_STRATEGY CHECKOUT
+    GIT_SUBMODULES_RECURSE TRUE
 
     SOURCE_DIR ${LIBDAISY_DIR}
 
@@ -19,7 +23,11 @@ ExternalProject_add(libDaisy
 ExternalProject_add(DaisySP 
     GIT_REPOSITORY "https://github.com/electro-smith/DaisySP.git"
     GIT_TAG "origin/master"
-
+    GIT_SHALLOW TRUE
+    GIT_PROGRESS TRUE
+    GIT_REMOTE_UPDATE_STRATEGY CHECKOUT
+    GIT_SUBMODULES_RECURSE TRUE
+    
     SOURCE_DIR ${DAISYSP_DIR}
 
     CONFIGURE_COMMAND ""
