@@ -5,7 +5,6 @@ namespace deepnote
 
     struct LinearUnitShaper
     {
-    public:
         float operator()(const float value) const
         {
             return value;

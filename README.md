@@ -19,7 +19,7 @@ make
 
 ## Device Programming
 ```
-make program
+make program-dfu
 ```
 
 ## Source Level Debugging

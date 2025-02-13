@@ -12,37 +12,24 @@ namespace deepnote
         using OutputRange = NamedType<Range, struct OutputRangeTag>;
     };
 
-    class Scaler
+    struct Scaler
     {
-    public:
         Scaler() : input(Range(nt::RangeLow(0.0), nt::RangeHigh(1.0))),
                    output(Range(nt::RangeLow(0.0), nt::RangeHigh(1.0)))
         {
         }
 
-        Scaler(const nt::InputRange input, const nt::OutputRange output) : input(input.get()),
-                                                                           output(output.get())
+        explicit Scaler(const nt::InputRange input, const nt::OutputRange output) : input(input.get()),
+                                                                                    output(output.get())
         {
         }
 
-        Scaler(const nt::InputRange input) : Scaler(input, nt::OutputRange(Range(nt::RangeLow(0.0), nt::RangeHigh(1.0))))
+        explicit Scaler(const nt::InputRange input) : Scaler(input, nt::OutputRange(Range(nt::RangeLow(0.0), nt::RangeHigh(1.0))))
         {
         }
 
-        Scaler(const Scaler &other) : input(other.input),
-                                      output(other.output)
-        {
-        }
-
-        Scaler &operator=(const Scaler &other)
-        {
-            if (this != &other)
-            {
-                input = other.input;
-                output = other.output;
-            }
-            return *this;
-        }
+        Scaler(const Scaler &other) = default;
+        Scaler &operator=(const Scaler &other) = default;
 
         float operator()(const float value) const
         {

@@ -11,16 +11,15 @@ namespace deepnote
         using RangeHigh = NamedType<float, struct RangeHighTag>;
     };
 
-    class Range
+    struct Range
     {
-    public:
         Range() : low(0.f),
                   high(0.f)
         {
         }
 
-        Range(nt::RangeLow low, nt::RangeHigh high) : low(low.get() < high.get() ? low.get() : high.get()),
-                                                      high(high.get() > low.get() ? high.get() : low.get())
+        explicit Range(nt::RangeLow low, nt::RangeHigh high) : low(low.get() < high.get() ? low.get() : high.get()),
+                                                               high(high.get() > low.get() ? high.get() : low.get())
         {
         }
 
