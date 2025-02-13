@@ -1,14 +1,14 @@
 #include "ranges/scaler.hpp"
 #include <doctest/doctest.h>
 
-namespace types = deepnote::nt;
+namespace nt = deepnote::nt;
 
 TEST_CASE("Scaler")
 {
     SUBCASE("Scaler::scale")
     {
-        types::InputRange input(deepnote::Range(types::RangeLow(0), types::RangeHigh(10)));
-        types::OutputRange output(deepnote::Range(types::RangeLow(0), types::RangeHigh(10)));
+        nt::InputRange input(deepnote::Range(nt::RangeLow(0), nt::RangeHigh(10)));
+        nt::OutputRange output(deepnote::Range(nt::RangeLow(0), nt::RangeHigh(10)));
         deepnote::Scaler scaler(input, output);
         CHECK(scaler(0) == 0);
         CHECK(scaler(10) == 10);
@@ -16,8 +16,8 @@ TEST_CASE("Scaler")
 
     SUBCASE("Scaler::scale")
     {
-        types::InputRange input(deepnote::Range(types::RangeLow(0), types::RangeHigh(10)));
-        types::OutputRange output(deepnote::Range(types::RangeLow(0), types::RangeHigh(1)));
+        nt::InputRange input(deepnote::Range(nt::RangeLow(0), nt::RangeHigh(10)));
+        nt::OutputRange output(deepnote::Range(nt::RangeLow(0), nt::RangeHigh(1)));
         deepnote::Scaler scaler(input, output);
         CHECK(scaler(0) == 0);
         CHECK(scaler(10) == 1);
@@ -25,8 +25,8 @@ TEST_CASE("Scaler")
 
     SUBCASE("Scaler::scale")
     {
-        types::InputRange input(deepnote::Range(types::RangeLow(-5.0), types::RangeHigh(5)));
-        types::OutputRange output(deepnote::Range(types::RangeLow(0), types::RangeHigh(1)));
+        nt::InputRange input(deepnote::Range(nt::RangeLow(-5.0), nt::RangeHigh(5)));
+        nt::OutputRange output(deepnote::Range(nt::RangeLow(0), nt::RangeHigh(1)));
         deepnote::Scaler scaler(input, output);
         CHECK(scaler(-5) == 0);
         CHECK(scaler(5) == 1);
@@ -34,8 +34,8 @@ TEST_CASE("Scaler")
 
     SUBCASE("Scaler::scale")
     {
-        types::InputRange input(deepnote::Range(types::RangeLow(0), types::RangeHigh(1)));
-        types::OutputRange output(deepnote::Range(types::RangeLow(-5), types::RangeHigh(5)));
+        nt::InputRange input(deepnote::Range(nt::RangeLow(0), nt::RangeHigh(1)));
+        nt::OutputRange output(deepnote::Range(nt::RangeLow(-5), nt::RangeHigh(5)));
         deepnote::Scaler scaler(input, output);
         CHECK(scaler(0.5) == 0);
         CHECK(scaler(0) == -5);

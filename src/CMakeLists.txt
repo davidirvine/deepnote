@@ -14,7 +14,7 @@ endforeach()
 
 target_link_libraries(${TARGET} PRIVATE
     ${DAISYSP_DIR}/build/libdaisysp.a
-    ${DAISYSP_DIR}/DaisySP-LGPL/build/libdaisysp-lgpl.a
+    # ${DAISYSP_DIR}/DaisySP-LGPL/build/libdaisysp-lgpl.a
     ${LIBDAISY_DIR}/build/libdaisy.a
 )
 
@@ -22,7 +22,7 @@ include_directories(
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     ${DAISYSP_DIR}/Source
     ${DAISYSP_DIR}/Source/Utility
-    ${DAISYSP_DIR}/DaisySP-LGPL/Source
+    # ${DAISYSP_DIR}/DaisySP-LGPL/Source
     ${LIBDAISY_DIR}/src
     ${LIBDAISY_DIR}/src/sys
     ${LIBDAISY_DIR}/src/usbh

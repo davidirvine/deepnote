@@ -4,6 +4,7 @@
 #include "ranges/range.hpp"
 #include "ranges/scaler.hpp"
 #include "unitshapers/bezier.hpp"
+#include "oscfrequency.hpp"
 #include "Synthesis/oscillator.h"
 
 namespace deepnote
@@ -13,59 +14,28 @@ namespace deepnote
         using SampleRate = NamedType<float, struct SampleRateTag>;
         using AnimationMultiplier = NamedType<float, struct AnimationMultiplierTag>;
         using DetuneHz = NamedType<float, struct DetuneHzTag>;
+        using OscillatorFrequencyRange = NamedType<Range, struct OscillatorFrequencyRangeTag>;
     }
-
-    struct TraceValues
-    {
-        TraceValues(const float start_freq, const float target_freq, const int in_state, const int out_state,
-                    const float animation_lfo_value, const float shaped_animation_value, const float animation_freq,
-                    const float current_frequency, const float osc_value) : start_freq(start_freq),
-                                                                            target_freq(target_freq),
-                                                                            in_state(in_state),
-                                                                            out_state(out_state),
-                                                                            animation_lfo_value(animation_lfo_value),
-                                                                            shaped_animation_value(shaped_animation_value),
-                                                                            animation_freq(animation_freq),
-                                                                            current_frequency(current_frequency),
-                                                                            osc_value(osc_value)
-        {
-        }
-
-        float start_freq;
-        float target_freq;
-        int in_state;
-        int out_state;
-        float animation_lfo_value;
-        float shaped_animation_value;
-        float animation_freq;
-        float current_frequency;
-        float osc_value;
-    };
 
     struct NoopTrace
     {
-        inline void operator()(const TraceValues &values) const
-        {
-        }
+        template <typename T, typename... Args>
+        void operator()(T first, Args... rest) const {}
+
+        template <typename T>
+        void operator()(T value) const {}
     };
 
-    constexpr float ANIMATION_LFO_AMPLITUDE{0.5f};
+    const float ANIMATION_LFO_AMPLITUDE{0.5f};
 
-    template <int num_oscillators = 1>
-    class DeepnoteVoice
+    template <unsigned int NUM_OSCILLATORS = 1>
+    struct DeepnoteVoice
     {
-    public:
-        DeepnoteVoice()
-        {
-        }
+        DeepnoteVoice() = default;
+        virtual ~DeepnoteVoice() = default;
 
-        virtual ~DeepnoteVoice()
-        {
-        }
-
-        template <typename F>
         void init(const nt::OscillatorFrequency start_frequency, const nt::SampleRate sample_rate,
-                  const nt::OscillatorFrequency animation_frequency, const F &random)
+                  const nt::OscillatorFrequency animation_frequency)
         {
             this->start_frequency = start_frequency;
             this->target_frequency = start_frequency;
@@ -85,15 +55,10 @@ namespace deepnote
         {
             const auto in_state{state};
             //  if we in a pending state, reset the animation LFO and move to the next state
-            switch (state)
+            if (state == PENDING_TRANSIT_TO_TARGET)
             {
-            case PENDING_TRANSIT_TO_TARGET:
                 state = IN_TRANSIT_TO_TARGET;
                 animation_lfo.Reset();
-                break;
-
-            default:
-                break;
             }
 
             //  Take the linear ramp of the animation LFO and apply the shaper to it
@@ -104,16 +69,14 @@ namespace deepnote
             const BezierUnitShaper animation_shaper(cp1, cp2);
             const auto animation_lfo_value = animation_lfo.Process() + ANIMATION_LFO_AMPLITUDE;
             auto shaped_animation_value = animation_shaper(animation_lfo_value);
-
             nt::OscillatorFrequency animation_freq(0.f);
 
-            switch (state)
+            if (state == AT_TARGET)
             {
-            case AT_TARGET:
                 current_frequency = target_frequency;
-                break;
-
-            default:
+            }
+            else
+            {
                 //  If we want the frequency to decrease we need to flip the shaped value
                 if (start_frequency.get() > target_frequency.get())
                 {
@@ -131,9 +94,9 @@ namespace deepnote
 
                 animation_freq = nt::OscillatorFrequency(animationScaler(shaped_animation_value));
                 current_frequency = animation_freq;
-                break;
             }
 
+            // Valid frequencies are from start_frequency to target_frequency
             const nt::OscillatorFrequencyRange validFrequencyRange(
                 Range(
                     nt::RangeLow(start_frequency.get()),
@@ -147,8 +110,8 @@ namespace deepnote
                 {
                     const nt::OscillatorFrequencyRange targetRange(
                         Range(
-                            nt::RangeLow(target_frequency.get() - 1),
-                            nt::RangeHigh(target_frequency.get() + 1)));
+                            nt::RangeLow(target_frequency.get() - 1.f),
+                            nt::RangeHigh(target_frequency.get() + 1.f)));
 
                     if (targetRange.get().contains(current_frequency.get()))
                     {
@@ -159,23 +122,16 @@ namespace deepnote
             }
             else
             {
-                // The frequency is outside the valid range, so constrain it and set the state
-                switch (state)
-                {
-                case IN_TRANSIT_TO_TARGET:
-                    state = AT_TARGET;
-                    break;
-                default:
-                    break;
-                }
+                // The frequency is outside the valid range, so constrain it
                 current_frequency = nt::OscillatorFrequency(validFrequencyRange.get().constrain(current_frequency.get()));
+                state = (state == IN_TRANSIT_TO_TARGET) ? AT_TARGET : state;
             }
 
             //  Update all oscillators using the new frequency
             const auto osc_value = process_oscillators();
 
             //  Give the traceFunctor a chance to log the state of the voice
-            trace_functor(TraceValues(
+            trace_functor(
                 start_frequency.get(),
                 target_frequency.get(),
                 in_state,
@@ -184,7 +140,7 @@ namespace deepnote
                 shaped_animation_value,
                 animation_freq.get(),
                 current_frequency.get(),
-                osc_value));
+                osc_value);
 
             return osc_value;
         }
@@ -203,7 +159,7 @@ namespace deepnote
             this->state = PENDING_TRANSIT_TO_TARGET;
         }
 
-        void reset_start_frequency(const nt::OscillatorFrequency start_frequency)
+        void set_start_frequency(const nt::OscillatorFrequency start_frequency)
         {
             //  set up a new transit from a new start frequency
             this->start_frequency = start_frequency;
@@ -211,13 +167,16 @@ namespace deepnote
             this->state = PENDING_TRANSIT_TO_TARGET;
         }
 
-        void compute_detune(const nt::DetuneHz detune)
+        void set_detune(const nt::DetuneHz detune)
         {
-            const auto half = num_oscillators / 2;
-            for (size_t i = 0; i < num_oscillators; ++i)
+            // If we only have one oscillator, we don't need to detune it
+            // Otherwise distribute the either side of the fundamental frequency by an
+            // integer muliples of detune.
+            const auto half = NUM_OSCILLATORS / 2;
+            size_t i = 0;
+            for (auto &osc : oscillators)
             {
-                auto &osc = oscillators[i];
-                if (num_oscillators <= 1)
+                if (NUM_OSCILLATORS <= 1)
                 {
                     osc.detune_amount = 0.f;
                 }
@@ -226,6 +185,7 @@ namespace deepnote
                     const int8_t idx = i - half + ((i >= half) ? 1 : 0);
                     osc.detune_amount = idx * detune.get();
                 }
+                ++i;
             }
         }
 
@@ -245,7 +205,7 @@ namespace deepnote
                 osc.oscillator.SetFreq(frequency.get());
             }
 
-            compute_detune(detune);
+            set_detune(detune);
         }
 
         float process_oscillators()
@@ -278,7 +238,7 @@ namespace deepnote
         nt::OscillatorFrequency start_frequency{0.f};
         nt::OscillatorFrequency target_frequency{0.f};
         nt::OscillatorFrequency current_frequency{0.f};
-        DetunedOscillator oscillators[num_oscillators];
+        std::array<DetunedOscillator, NUM_OSCILLATORS> oscillators;
         nt::OscillatorFrequency base_animation_frequency{0.f};
         daisysp::Oscillator animation_lfo;
         Scaler animation_scaler;

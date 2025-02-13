@@ -11,30 +11,17 @@ namespace deepnote
         using ControlPoint2 = NamedType<float, struct ControlPoint2Tag>;
     };
 
-    class BezierUnitShaper
+    struct BezierUnitShaper
     {
-    public:
         BezierUnitShaper() = default;
 
-        BezierUnitShaper(const nt::ControlPoint1 y2, const nt::ControlPoint2 y3) : y2(y2.get()),
-                                                                                   y3(y3.get())
+        explicit BezierUnitShaper(const nt::ControlPoint1 y2, const nt::ControlPoint2 y3) : y2(y2.get()),
+                                                                                            y3(y3.get())
         {
         }
 
-        BezierUnitShaper(const BezierUnitShaper &other) : y2(other.y2),
-                                                          y3(other.y3)
-        {
-        }
-
-        BezierUnitShaper &operator=(const BezierUnitShaper &other)
-        {
-            if (this != &other)
-            {
-                y2 = other.y2;
-                y3 = other.y3;
-            }
-            return *this;
-        }
+        BezierUnitShaper(const BezierUnitShaper &other) = default;
+        BezierUnitShaper &operator=(const BezierUnitShaper &other) = default;
 
         float operator()(const float t) const
         {
