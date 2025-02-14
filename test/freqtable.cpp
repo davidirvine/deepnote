@@ -5,7 +5,7 @@
 namespace nt = deepnote::nt;
 
 
-deepnote::FreqencyFunc fn(const float f) {
+deepnote::FrequencyFunc fn(const float f) {
 	return deepnote::FreqencyFunc([f]() {
 		return nt::OscillatorFrequency(f);
 	});

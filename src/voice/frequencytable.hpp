@@ -13,13 +13,13 @@ namespace deepnote
         using VoiceIndex = NamedType<unsigned int, struct VoiceIndexTag>;
     }
 
-    using FreqencyFunc = std::function<nt::OscillatorFrequency()>;
+    using FrequencyFunc = std::function<nt::OscillatorFrequency()>;
 
     template <unsigned int TABLE_HEIGHT, unsigned int TABLE_WIDTH>
     struct FrequencyTable
     {
         //  the table is a 2D array of functions that return a frequency
-        using TableType = std::array<std::array<FreqencyFunc, TABLE_WIDTH>, TABLE_HEIGHT>;
+        using TableType = std::array<std::array<FrequencyFunc, TABLE_WIDTH>, TABLE_HEIGHT>;
 
         FrequencyTable(const TableType &table) : freq_functions(table) {};
         FrequencyTable(const FrequencyTable<TABLE_HEIGHT, TABLE_WIDTH> &other) = default;
