@@ -11,7 +11,6 @@
 #include "voice/frequencytable.hpp"
 #include "voice/deepnotevoice.hpp"
 #include "ranges/range.hpp"
-#include "util/namedtype.hpp"
 #include "daisy_core.h"
 #include <array>
 #include <atomic>
@@ -39,7 +38,7 @@ const int FREQ_TABLE_HEIGHT = 13;
 // Generate a random frequency with in a range of frequencies
 // This function is stored in the the first row of the frequency table allowing
 // the drone to start with a new random "chord" each time it is started.
-deepnote::FreqencyFunc random_start_freq = []()
+deepnote::FrequencyFunc random_start_freq = []()
 {
 	const auto low = nt::RangeLow(200.f);
 	const auto high = nt::RangeHigh(400.f);
@@ -47,9 +46,9 @@ deepnote::FreqencyFunc random_start_freq = []()
 };
 
 // Return the fucntion that returns a fixed frequency
-deepnote::FreqencyFunc freq(const float f)
+deepnote::FrequencyFunc freq(const float f)
 {
-	return deepnote::FreqencyFunc([f]()
+	return deepnote::FrequencyFunc([f]()
 								  { return nt::OscillatorFrequency(f); });
 };
 
