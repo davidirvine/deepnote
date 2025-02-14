@@ -1,7 +1,6 @@
 {
     "env": {
-        "DAISYSP_DIR": "${workspaceFolder}/thirdparty/daisysp",
-        "LIBDAISY_DIR": "${workspaceFolder}/thirdparty/libdaisy"
+        "DAISYSP_DIR": "${workspaceFolder}/thirdparty/daisysp"
     },
     "configurations": [
         {
@@ -18,8 +17,7 @@
                 "${workspaceFolder}/src/**",
                 "${workspaceFolder}/test/**",
                 "${workspaceFolder}/thirdparty/**",
-                "${DAISYSP_DIR}/**",
-                "${LIBDAISY_DIR}/**"
+                "${DAISYSP_DIR}/**"
             ],
             "intelliSenseMode": "gcc-arm",
             "browse": {
