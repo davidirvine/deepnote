@@ -41,14 +41,14 @@ struct OfstreamCsvTraceFunctor
 
     
     template <typename T, typename... Args>
-    void operator()(T first, Args... rest) const
+    void operator()(const T &first, Args&&... rest) const
     {
         (*out) << first << ", ";
         (*this)(rest...);
     }
 
     template <typename T>
-    void operator()(T value) const
+    void operator()(const T &value) const
     {
         (*out) << value << std::endl;
     }
