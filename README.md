@@ -18,13 +18,13 @@ Each `deepnote::DeepnoteVoice` has:
 
 The animation LFO defines how quickly current frequency transitions from start to target frequency. LFO output is mapped via an animation scaler to a point in the start to target frequency range. This enables mapping beyond simple linear mapping.
 
-The oscilators of a `deepnote::DeepnoteVoice` can be detuned and are of type `daisysp::Oscillator::WAVE_POLYBLEP_SAW`.
+The oscilators of a `deepnote::DeepnoteVoice` can be detuned (defaults to no/0Hz detune) and are of type `daisysp::Oscillator::WAVE_POLYBLEP_SAW`.
 
-The `deepnote::DeepnotVoice::init` method must be called before using an instance of `deepnote::DeepnoteVoice`. This method requires the caller to specify start frequency, sample rate, and animation LFO frequency.
+The `deepnote::DeepnoteVoice::init` method must be called before using an instance of `deepnote::DeepnoteVoice`. This method requires the caller to specify start frequency, sample rate, and animation LFO frequency.
 
-A `deepnote::BezierUnitShaper` is used for the animation scaler. The shape of the bezier curve can be manipulated via 2 control points. Values for these control points along with a multiplyer for the animation LFO frequency are required arguments to the `deepnote::DeepnotVoice::process` method.
+A `deepnote::BezierUnitShaper` is used for the animation scaler. The shape of the bezier curve can be manipulated via 2 control points. Values for these control points along with a multiplyer for the animation LFO frequency are required arguments to the `deepnote::DeepnoteVoice::process` method.
 
-`deepnote::DeepnotVoice::process` should be called from your audio loop to generate a single audio sample. 
+`deepnote::DeepnoteVoice::process` should be called from your audio loop to generate a single audio sample. 
 
 ## Strong Types
 
