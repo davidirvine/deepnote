@@ -8,12 +8,27 @@ The voice is written as a header only C++14 library. [DaisySP](https://github.co
 
 [deepnote-seed](https://github.com/davidirvine/deepnote-seed) embeds a `deepnote` voice into Daisy Seed hardware providing physical control over voice parametes. 
 
+## Overview
 
-This repo uses Git submodules so after cloning this repo:
-```
-git submodule init
-git submodule update --remote --recursive
-```
+Each `deepnote::DeepnoteVoice` has: 
+- 1 or more oscillators
+- a start, target, and current frequency
+- an animation LFO
+- an animation scaler
+
+The animation LFO defines how quickly current frequency transitions from start to target frequency. LFO output is mapped via an animation scaler to a point in the start to target frequency range. This enables mapping beyond simple linear mapping.
+
+The oscilators of a `deepnote::DeepnoteVoice` can be detuned and are of type `daisysp::Oscillator::WAVE_POLYBLEP_SAW`.
+
+The `deepnote::DeepnotVoice::init` method must be called before using an instance of `deepnote::DeepnoteVoice`. This method requires the caller to specify start frequency, sample rate, and animation LFO frequency.
+
+A `deepnote::BezierUnitShaper` is used for the animation scaler. The shape of the bezier curve can be manipulated via 2 control points. Values for these control points along with a multiplyer for the animation LFO frequency are required arguments to the `deepnote::DeepnotVoice::process` method.
+
+`deepnote::DeepnotVoice::process` should be called from your audio loop to generate a single audio sample. 
+
+## Strong Types
+
+There are a lot of variables, function parameters, etc of type float. Strong types are used to provide an easy to understand interface and provide structure to the sea of floats. These strong types are defined in the `deepnote::nt` namespace and utilize `deepnote::NamedType` found in `src/util/namedtype.hpp`.
 
 ## Building and Running Unit Tests
 
