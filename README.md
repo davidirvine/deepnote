@@ -1,40 +1,52 @@
 # deepnote
 
-A Daisy Seed synth thing inspired by THX Deep Note. https://www.thx.com/deepnote/
+An implementaiton of a synth void inspired by [THX Deep Note](https://www.thx.com/deepnote/).
 
-This repo uses Git submodules so when cloning you'll probably want to use the `--recurse-submodules` option. If you forgot or want to update the submodules recursively use `git submodule update --init --recursive`.
+The voice is written as a header only C++14 library. [DaisySP](https://github.com/electro-smith/DaisySP) is used for the oscillator implementaions.
 
+[deepnote-rack](https://github.com/davidirvine/deepnote-rack) wraps a VCVRack module around a `deepnote` voice providing CV control over voice parameters. 
 
-## Build Setup
-```
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Debug ..
-```
+[deepnote-seed](https://github.com/davidirvine/deepnote-seed) embeds a `deepnote` voice into Daisy Seed hardware providing physical control over voice parametes. 
 
-## Building
-```
-make
-```
+## Overview
 
-## Device Programming
-```
-make program
-```
+Each `deepnote::DeepnoteVoice` has: 
+- 1 or more oscillators
+- a start, target, and current frequency
+- an animation LFO
+- an animation scaler
 
-## Source Level Debugging
-A launch configuration is provided which enables source level debugging using a JTAG debug probe.
+The animation LFO defines how quickly current frequency transitions from start to target frequency. LFO output is mapped via an animation scaler to a point in the start to target frequency range. This enables mapping beyond simple linear mapping.
 
-## Unit Tests
-Unit tests follow the pattern found in `libDaisy`. Unit tests are complied and run natively not cross compiled for the Daisy Seed. This limits what you can unit test since the code under test can not be dependent on `libDaisy`.
+The oscilators of a `deepnote::DeepnoteVoice` can be detuned (defaults to no/0Hz detune) and are of type `daisysp::Oscillator::WAVE_POLYBLEP_SAW`.
 
-To build the unit tests:
+The `deepnote::DeepnoteVoice::init` method must be called before using an instance of `deepnote::DeepnoteVoice`. This method requires the caller to specify start frequency, sample rate, and animation LFO frequency.
+
+A `deepnote::BezierUnitShaper` is used for the animation scaler. The shape of the bezier curve can be manipulated via 2 control points. Values for these control points along with a multiplyer for the animation LFO frequency are required arguments to the `deepnote::DeepnoteVoice::process` method.
+
+`deepnote::DeepnoteVoice::process` should be called from your audio loop to generate a single audio sample. 
+
+## Strong Types
+
+There are a lot of variables, function parameters, etc of type float. Strong types are used to provide an easy to understand interface and provide structure to the sea of floats. These strong types are defined in the `deepnote::nt` namespace and utilize `deepnote::NamedType` found in `src/util/namedtype.hpp`.
+
+## Building and Running Unit Tests
+
+Unit tests are implemented using [doctest](https://github.com/doctest/doctest). To build the unit tests:
+
 ```
 cd test
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Debug ..
+
 make
 ```
 
-Unit tests are compiled with the `-g` option. A sample source level unit test debug configuration can be found in `.vscode/launch.json`.
+To run the unit tests:
+```
+cd test
+./build/bin/tests
+```
+
+The `Unit Test Debug` configuration can be used for source debugging of the unit tests.

@@ -1,13 +1,12 @@
 {
     "env": {
-        "DAISYSP_DIR": "${workspaceFolder}/daisysp",
-        "LIBDAISY_DIR": "${workspaceFolder}/libdaisy"
+        "DAISYSP_DIR": "${workspaceFolder}/thirdparty/daisysp"
     },
     "configurations": [
         {
             "name": "Daisy",
             "cStandard": "c11",
-            "cppStandard": "c++17",
+            "cppStandard": "c++11",
             "compilerPath": "/usr/local/bin/arm-none-eabi-g++",
             "defines": [
                 "_DEBUG",
@@ -16,8 +15,9 @@
             ],
             "includePath": [
                 "${workspaceFolder}/src/**",
-                "${DAISYSP_DIR}/**",
-                "${LIBDAISY_DIR}/**"
+                "${workspaceFolder}/test/**",
+                "${workspaceFolder}/thirdparty/**",
+                "${DAISYSP_DIR}/**"
             ],
             "intelliSenseMode": "gcc-arm",
             "browse": {
