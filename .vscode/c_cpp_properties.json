@@ -6,7 +6,7 @@
         {
             "name": "Daisy",
             "cStandard": "c11",
-            "cppStandard": "c++11",
+            "cppStandard": "c++17",
             "compilerPath": "/usr/local/bin/arm-none-eabi-g++",
             "defines": [
                 "_DEBUG",
