@@ -1,11 +1,10 @@
 #include "voice/deepnotevoice.hpp"
 #include "ranges/range.hpp"
 #include <doctest/doctest.h>
-#include <random>
-#include <iostream>
+#include <array>
 #include <fstream>
 #include <iomanip>
-#include <memory>
+#include <iostream>
 
 namespace nt = deepnote::nt;
 
@@ -58,7 +57,7 @@ private:
     std::unique_ptr<std::ofstream> out;
 };
 
-using TestVoiceType = deepnote::DeepnoteVoice<2>;
+
 
 TEST_CASE("DeepnoteVoice log single cycle")
 {
@@ -66,9 +65,11 @@ TEST_CASE("DeepnoteVoice log single cycle")
     {
         const OfstreamCsvTraceFunctor trace_functor("./single_cycle_ascending.csv");
         const auto sample_rate = nt::SampleRate(48000);
-        TestVoiceType voice;
-
-        voice.init(
+        deepnote::DeepnoteVoice voice;
+    
+        init_voice(
+            voice,
+            1,
             nt::OscillatorFrequency(400.f),
             sample_rate,
             nt::OscillatorFrequency(1.f));
@@ -78,7 +79,8 @@ TEST_CASE("DeepnoteVoice log single cycle")
         CHECK(!voice.is_at_target());
         for (int i = 0; i < sample_rate.get(); i++)
         {
-            voice.process(
+            process_voice(
+                voice,
                 nt::AnimationMultiplier(1.f),
                 nt::ControlPoint1(0.08f),
                 nt::ControlPoint2(0.5f),
@@ -91,9 +93,11 @@ TEST_CASE("DeepnoteVoice log single cycle")
     {
         const OfstreamCsvTraceFunctor trace_functor("./single_cycle_decending.csv");
         const nt::SampleRate sample_rate{48000};
-        TestVoiceType voice;
+        deepnote::DeepnoteVoice  voice;
 
-        voice.init(
+        init_voice(
+            voice,
+            1,
             nt::OscillatorFrequency(20000.f),
             sample_rate,
             nt::OscillatorFrequency(1.f));
@@ -103,7 +107,8 @@ TEST_CASE("DeepnoteVoice log single cycle")
         CHECK(!voice.is_at_target());
         for (int i = 0; i < sample_rate.get(); i++)
         {
-            voice.process(
+            process_voice(
+                voice,
                 nt::AnimationMultiplier(1.f),
                 nt::ControlPoint1(0.08f),
                 nt::ControlPoint2(0.5f),
@@ -117,9 +122,11 @@ TEST_CASE("DeepnoteVoice log multiple cycles and targets")
 {
     const OfstreamCsvTraceFunctor trace_functor("./multi_cycle.csv");
     const nt::SampleRate sample_rate{48000};
-    TestVoiceType voice;
+    deepnote::DeepnoteVoice voice;
 
-    voice.init(
+    init_voice(
+        voice,
+        1,
         nt::OscillatorFrequency(20000.f),
         sample_rate,
         nt::OscillatorFrequency(1.f));
@@ -129,7 +136,8 @@ TEST_CASE("DeepnoteVoice log multiple cycles and targets")
     CHECK(!voice.is_at_target());
     for (int i = 0; i < sample_rate.get(); i++)
     {
-        voice.process(
+        process_voice(
+            voice,
             nt::AnimationMultiplier(1.f),
             nt::ControlPoint1(0.08f),
             nt::ControlPoint2(0.5f),
@@ -142,7 +150,8 @@ TEST_CASE("DeepnoteVoice log multiple cycles and targets")
     CHECK(!voice.is_at_target());
     for (int i = 0; i < sample_rate.get(); i++)
     {
-        voice.process(
+        process_voice(
+            voice,
             nt::AnimationMultiplier(1.f),
             nt::ControlPoint1(0.08f),
             nt::ControlPoint2(0.5f),
@@ -155,7 +164,8 @@ TEST_CASE("DeepnoteVoice log multiple cycles and targets")
     CHECK(!voice.is_at_target());
     for (int i = 0; i < sample_rate.get(); i++)
     {
-        voice.process(
+        process_voice(
+            voice,
             nt::AnimationMultiplier(1.f),
             nt::ControlPoint1(0.08f),
             nt::ControlPoint2(0.5f),
@@ -168,9 +178,11 @@ TEST_CASE("DeepnoteVoice log target changed mid cycle")
 {
     const OfstreamCsvTraceFunctor trace_functor("./target_change_mid_cycle.csv");
     const nt::SampleRate sample_rate{48000};
-    TestVoiceType voice;
+    deepnote::DeepnoteVoice voice;
 
-    voice.init(
+    init_voice(
+        voice,
+        1,
         nt::OscillatorFrequency(20000.f),
         sample_rate,
         nt::OscillatorFrequency(1.f));
@@ -180,7 +192,8 @@ TEST_CASE("DeepnoteVoice log target changed mid cycle")
     CHECK(!voice.is_at_target());
     for (int i = 0; i < sample_rate.get() / 2; i++)
     {
-        voice.process(
+        process_voice(
+            voice,
             nt::AnimationMultiplier(1.f),
             nt::ControlPoint1(0.08f),
             nt::ControlPoint2(0.5f),
@@ -193,7 +206,8 @@ TEST_CASE("DeepnoteVoice log target changed mid cycle")
     CHECK(!voice.is_at_target());
     for (int i = 0; i < sample_rate.get(); i++)
     {
-        voice.process(
+        process_voice(
+            voice,
             nt::AnimationMultiplier(1.f),
             nt::ControlPoint1(0.08f),
             nt::ControlPoint2(0.5f),
@@ -206,9 +220,11 @@ TEST_CASE("DeepnoteVoice log target changed mid cycle then reset")
 {
     const OfstreamCsvTraceFunctor trace_functor("./target_change_reset.csv");
     const nt::SampleRate sample_rate{48000};
-    TestVoiceType voice;
+    deepnote::DeepnoteVoice voice;
 
-    voice.init(
+    init_voice(
+        voice,
+        1,
         nt::OscillatorFrequency(20000.f),
         sample_rate,
         nt::OscillatorFrequency(1.f));
@@ -218,7 +234,8 @@ TEST_CASE("DeepnoteVoice log target changed mid cycle then reset")
     CHECK(!voice.is_at_target());
     for (int i = 0; i < sample_rate.get() / 2; i++)
     {
-        voice.process(
+        process_voice(
+            voice,
             nt::AnimationMultiplier(1.f),
             nt::ControlPoint1(0.08f),
             nt::ControlPoint2(0.5f),
@@ -231,7 +248,8 @@ TEST_CASE("DeepnoteVoice log target changed mid cycle then reset")
     CHECK(!voice.is_at_target());
     for (int i = 0; i < sample_rate.get() / 2; i++)
     {
-        voice.process(
+        process_voice(
+            voice,
             nt::AnimationMultiplier(1.f),
             nt::ControlPoint1(0.08f),
             nt::ControlPoint2(0.5f),
@@ -244,7 +262,8 @@ TEST_CASE("DeepnoteVoice log target changed mid cycle then reset")
     CHECK(!voice.is_at_target());
     for (int i = 0; i < sample_rate.get(); i++)
     {
-        voice.process(
+        process_voice(
+            voice,
             nt::AnimationMultiplier(1.f),
             nt::ControlPoint1(0.08f),
             nt::ControlPoint2(0.5f),
