@@ -1,6 +1,6 @@
 # deepnote
 
-An implementaiton of a synth void inspired by [THX Deep Note](https://www.thx.com/deepnote/).
+An implementaiton of a synth voice inspired by [THX Deep Note](https://www.thx.com/deepnote/).
 
 The voice is written as a header only C++14 library. [DaisySP](https://github.com/electro-smith/DaisySP) is used for the oscillator implementaions.
 
