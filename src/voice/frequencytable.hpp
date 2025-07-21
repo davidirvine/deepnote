@@ -20,7 +20,10 @@ template <unsigned int TABLE_HEIGHT, unsigned int TABLE_WIDTH> struct FrequencyT
     //  the table is a 2D array of functions that return a frequency
     using TableType = std::array<std::array<FrequencyFunc, TABLE_WIDTH>, TABLE_HEIGHT>;
 
-    FrequencyTable(const TableType &table) : freq_functions(table) {}
+    FrequencyTable(const TableType &table) : freq_functions(table) 
+    {
+    }
+    
     FrequencyTable(const FrequencyTable<TABLE_HEIGHT, TABLE_WIDTH> &other) = default;
     FrequencyTable(FrequencyTable<TABLE_HEIGHT, TABLE_WIDTH> &&other)      = default;
     FrequencyTable<TABLE_HEIGHT, TABLE_WIDTH> &
