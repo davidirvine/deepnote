@@ -371,8 +371,8 @@ nt::OscillatorValue process_voice(DeepnoteVoice &voice, const nt::AnimationMulti
         state = DeepnoteVoice::IN_TRANSIT_TO_TARGET;
     }
 
-    const auto start_frequency   = voice.get_start_frequency();
-    const auto target_frequency = voice.get_target_frequency();
+    const auto              start_frequency  = voice.get_start_frequency();
+    const auto              target_frequency = voice.get_target_frequency();
     nt::OscillatorFrequency current_frequency(0.0f);
 
     if(state == DeepnoteVoice::AT_TARGET)
