@@ -7,6 +7,7 @@
 #include "oscfrequency.hpp"
 #include "Synthesis/oscillator.h"
 #include <array>
+#include <stdexcept>
 
 namespace deepnote
 {
@@ -52,6 +53,10 @@ namespace deepnote
 
         void set_target_frequency(const nt::OscillatorFrequency freq)
         {
+            if (freq.get() < 0.0f) {
+                throw std::invalid_argument("Target frequency must be non-negative");
+            }
+            
             //  set up a new transit from something close to the current frequency of
             //  the voice and the new target frequency
             this->start_frequency = this->current_frequency;
@@ -66,6 +71,10 @@ namespace deepnote
 
         void set_start_frequency(const nt::OscillatorFrequency freq)
         {
+            if (freq.get() < 0.0f) {
+                throw std::invalid_argument("Start frequency must be non-negative");
+            }
+            
             //  set up a new transit from a new start frequency
             this->start_frequency = freq;
             this->current_frequency = this->start_frequency;
@@ -84,6 +93,10 @@ namespace deepnote
 
         void scale_lfo_base_freq(const nt::AnimationMultiplier mulitplier)
         {
+            if (mulitplier.get() < 0.0f) {
+                throw std::invalid_argument("Animation multiplier must be non-negative");
+            }
+            
             lfo.SetFreq(lfo_base_freq.get() * mulitplier.get());
         }
 
@@ -114,6 +127,13 @@ namespace deepnote
 
         void init_lfo(const nt::SampleRate sample_rate, const nt::OscillatorFrequency base_freq)
         {
+            if (sample_rate.get() <= 0.0f) {
+                throw std::invalid_argument("Sample rate must be positive");
+            }
+            if (base_freq.get() < 0.0f) {
+                throw std::invalid_argument("LFO base frequency must be non-negative");
+            }
+            
             lfo_base_freq = base_freq;
             lfo.Init(sample_rate.get());
             lfo.SetAmp(LFO_AMPLITUDE);
@@ -133,7 +153,20 @@ namespace deepnote
 
         void init_oscillators(const size_t count, nt::SampleRate sample_rate, nt::OscillatorFrequency start_frequency)
         {
-            oscillator_count = std::min(count, MAX_OSCILLATORS);
+            if (count == 0) {
+                throw std::invalid_argument("Oscillator count must be at least 1");
+            }
+            if (count > MAX_OSCILLATORS) {
+                throw std::invalid_argument("Oscillator count exceeds maximum of " + std::to_string(MAX_OSCILLATORS));
+            }
+            if (sample_rate.get() <= 0.0f) {
+                throw std::invalid_argument("Sample rate must be positive");
+            }
+            if (start_frequency.get() < 0.0f) {
+                throw std::invalid_argument("Start frequency must be non-negative");
+            }
+            
+            oscillator_count = count;
             for (size_t i = 0; i < oscillator_count; ++i)
             {
                 oscillators[i].oscillator.Init(sample_rate.get());
