@@ -11,6 +11,18 @@ namespace deepnote
         using ControlPoint2 = NamedType<float, struct ControlPoint2Tag>;
     };
 
+    /**
+     * @brief Applies cubic Bezier curve shaping to unit input [0,1] -> [0,1]
+     * 
+     * Uses control points y2 and y3 with fixed endpoints y1=0, y4=1.
+     * The curve equation: B(t) = (1-t)³*y1 + 3(1-t)²*t*y2 + 3(1-t)*t²*y3 + t³*y4
+     * 
+     * This allows for non-linear interpolation between start and end points,
+     * enabling smooth acceleration/deceleration curves for audio parameter animation.
+     * 
+     * @param y2 First control point (influences curve shape near start)
+     * @param y3 Second control point (influences curve shape near end)
+     */
     struct BezierUnitShaper
     {
         BezierUnitShaper() = default;
@@ -23,6 +35,11 @@ namespace deepnote
         BezierUnitShaper(const BezierUnitShaper &other) = default;
         BezierUnitShaper &operator=(const BezierUnitShaper &other) = default;
 
+        /**
+         * @brief Apply Bezier curve transformation to input value
+         * @param t Input value in range [0,1]
+         * @return Shaped output value in range [0,1]
+         */
         float operator()(const float t) const
         {
             float y =

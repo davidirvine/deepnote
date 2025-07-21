@@ -38,6 +38,23 @@ namespace deepnote
         {}
     };
 
+    /**
+     * @brief A synthesizer voice implementing the THX Deep Note effect
+     * 
+     * The DeepnoteVoice manages multiple detuned oscillators that can smoothly
+     * transition between frequencies using an animated LFO and Bezier curve shaping.
+     * 
+     * Key features:
+     * - Multiple oscillators with symmetric detuning
+     * - Non-linear frequency transitions via Bezier curves
+     * - State-based animation system (PENDING -> IN_TRANSIT -> AT_TARGET)
+     * - LFO-driven animation with configurable speed multipliers
+     * 
+     * Usage:
+     * 1. Call init_voice() to set up the voice with desired parameters
+     * 2. Set target frequencies using set_target_frequency()
+     * 3. Call process_voice() in your audio loop to generate samples
+     */
     struct DeepnoteVoice
     {
         static constexpr size_t MAX_OSCILLATORS = 16;
@@ -183,6 +200,16 @@ namespace deepnote
             }
         }
 
+        /**
+         * @brief Detune oscillators symmetrically around the fundamental frequency
+         * 
+         * Distributes oscillators either side of the fundamental frequency using
+         * integer multiples of the detune amount. For N oscillators:
+         * - Single oscillator: no detuning (detune_amount = 0)
+         * - Multiple oscillators: distributed as ..., -2*detune, -detune, +detune, +2*detune, ...
+         * 
+         * @param detune Detuning amount in Hz for each step
+         */
         void detune_oscillators(const nt::DetuneHz detune)
         {
             // If we only have one oscillator, we don't need to detune it
@@ -232,6 +259,16 @@ namespace deepnote
     };
 
 
+    /**
+     * @brief Initialize a DeepnoteVoice with specified parameters
+     * 
+     * @param voice Voice instance to initialize
+     * @param oscillator_count Number of oscillators (1 to MAX_OSCILLATORS)
+     * @param start_frequency Initial frequency in Hz
+     * @param sample_rate Audio sample rate in Hz
+     * @param lfo_frequency Base LFO frequency for animation in Hz
+     * @param detune Oscillator detuning amount in Hz (default: 2.5 Hz)
+     */
     void init_voice(DeepnoteVoice &voice, const size_t oscillator_count, 
                     const nt::OscillatorFrequency start_frequency, const nt::SampleRate sample_rate, 
                     const nt::OscillatorFrequency lfo_frequency, const nt::DetuneHz detune = nt::DetuneHz(constants::DEFAULT_DETUNE_HZ))
@@ -335,6 +372,20 @@ namespace deepnote
     }
 
 
+    /**
+     * @brief Process a single audio sample from the voice
+     * 
+     * This is the main processing function that should be called once per audio sample.
+     * It handles frequency transitions, applies Bezier curve shaping, and generates
+     * the combined output from all oscillators.
+     * 
+     * @param voice Voice instance to process
+     * @param lfo_multiplier Speed multiplier for animation (1.0 = normal speed)
+     * @param cp1 First Bezier control point [0,1]
+     * @param cp2 Second Bezier control point [0,1]
+     * @param trace_functor Optional function for debugging/logging (default: no-op)
+     * @return Combined oscillator output value
+     */
     template <typename TraceFunc = NoopTrace>
     nt::OscillatorValue process_voice(DeepnoteVoice &voice, const nt::AnimationMultiplier lfo_multiplier,
                                       const nt::ControlPoint1 cp1, const nt::ControlPoint2 cp2, 
