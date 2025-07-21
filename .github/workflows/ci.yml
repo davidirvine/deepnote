@@ -1,5 +1,12 @@
 name: CI/CD Pipeline
 
+# Grant necessary permissions for GitHub Actions
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: read
+
 on:
   push:
     branches: [ main, develop, feature/* ]
@@ -122,15 +129,20 @@ jobs:
         lcov --list coverage.info
         
     - name: Upload to Codecov
+      if: false  # Temporarily disabled - enable when CODECOV_TOKEN is configured
       uses: codecov/codecov-action@v3
       with:
         file: test/build/coverage.info
-        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: false
 
   # Documentation generation
   documentation:
     runs-on: ubuntu-latest
     # Temporarily removed condition for testing
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     
     steps:
     - uses: actions/checkout@v4
@@ -148,10 +160,22 @@ jobs:
         doxygen Doxyfile
         
     - name: Deploy to GitHub Pages
+      id: deployment
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: docs/doxygen/docs/html
+        
+    # Alternative using official GitHub Pages action:
+    # - name: Setup Pages
+    #   uses: actions/configure-pages@v3
+    # - name: Upload artifact
+    #   uses: actions/upload-pages-artifact@v2
+    #   with:
+    #     path: docs/doxygen/docs/html
+    # - name: Deploy to GitHub Pages
+    #   id: deployment
+    #   uses: actions/deploy-pages@v2
 
   # Performance benchmarks
   benchmarks:
