@@ -47,8 +47,6 @@ jobs:
         echo "Repository: ${{ github.repository }}"
         echo "Actor: ${{ github.actor }}"
         echo "Event: ${{ github.event_name }}"
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   # Code quality checks
   code-quality:
