@@ -38,27 +38,27 @@ namespace deepnote
             return *this;
         }
 
-        nt::RangeLow get_low() const
+        nt::RangeLow get_low() const noexcept
         {
             return low;
         }
 
-        nt::RangeHigh get_high() const
+        nt::RangeHigh get_high() const noexcept
         {
             return high;
         }
 
-        float length() const
+        float length() const noexcept
         {
             return high.get() - low.get();
         }
 
-        bool contains(float value) const
+        bool contains(float value) const noexcept
         {
             return value >= low.get() && value <= high.get();
         }
 
-        float constrain(float value) const
+        float constrain(float value) const noexcept
         {
             if (value < low.get())
                 return low.get();

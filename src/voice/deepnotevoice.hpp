@@ -46,7 +46,7 @@ namespace deepnote
         DeepnoteVoice() = default;
         virtual ~DeepnoteVoice() = default;
 
-        nt::OscillatorFrequency get_target_frequency() const
+        nt::OscillatorFrequency get_target_frequency() const noexcept
         {
             return target_frequency;
         }
@@ -64,7 +64,7 @@ namespace deepnote
             this->state = PENDING_TRANSIT_TO_TARGET;
         }
 
-        nt::OscillatorFrequency get_start_frequency() const
+        nt::OscillatorFrequency get_start_frequency() const noexcept
         {
             return start_frequency;
         }
@@ -81,12 +81,12 @@ namespace deepnote
             this->state = PENDING_TRANSIT_TO_TARGET;
         }
 
-        nt::OscillatorFrequency get_current_frequency() const
+        nt::OscillatorFrequency get_current_frequency() const noexcept
         {
             return current_frequency;
         }
 
-        void set_current_frequency(const nt::OscillatorFrequency freq)
+        void set_current_frequency(const nt::OscillatorFrequency freq) noexcept
         {
             this->current_frequency = freq;
         }
@@ -100,27 +100,27 @@ namespace deepnote
             lfo.SetFreq(lfo_base_freq.get() * mulitplier.get());
         }
 
-        nt::OscillatorFrequency get_lfo_base_freq() const
+        nt::OscillatorFrequency get_lfo_base_freq() const noexcept
         {
             return lfo_base_freq;
         }
 
-        void set_lfo_base_freq(const nt::OscillatorFrequency freq)
+        void set_lfo_base_freq(const nt::OscillatorFrequency freq) noexcept
         {
             this->lfo_base_freq = freq;
         }
 
-        bool is_at_target() const
+        bool is_at_target() const noexcept
         {
             return state == AT_TARGET;
         }
 
-        State get_state() const
+        State get_state() const noexcept
         {
             return state;
         }
 
-        void set_state(const State state)
+        void set_state(const State state) noexcept
         {
             this->state = state;
         }
@@ -146,7 +146,7 @@ namespace deepnote
             return nt::OscillatorValue(lfo.Process() + LFO_AMPLITUDE);
         }
 
-        void reset_lfo()
+        void reset_lfo() noexcept
         {
             lfo.Reset();
         }
