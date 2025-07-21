@@ -11,6 +11,13 @@
 
 namespace deepnote
 {
+    namespace constants {
+        static constexpr float DEFAULT_LFO_AMPLITUDE = 0.5f;
+        static constexpr float DEFAULT_DETUNE_HZ = 2.5f;
+        static constexpr float TARGET_FREQUENCY_TOLERANCE = 1.0f;
+        static constexpr size_t NEAR_BEGINNING_SAMPLES = 4800;
+    }
+
     namespace nt
     {
         using SampleRate = NamedType<float, struct SampleRateTag>;
@@ -34,7 +41,7 @@ namespace deepnote
     struct DeepnoteVoice
     {
         static constexpr size_t MAX_OSCILLATORS = 16;
-        const float LFO_AMPLITUDE{0.5f};
+        const float LFO_AMPLITUDE{constants::DEFAULT_LFO_AMPLITUDE};
 
         enum State
         {
@@ -227,7 +234,7 @@ namespace deepnote
 
     void init_voice(DeepnoteVoice &voice, const size_t oscillator_count, 
                     const nt::OscillatorFrequency start_frequency, const nt::SampleRate sample_rate, 
-                    const nt::OscillatorFrequency lfo_frequency, const nt::DetuneHz detune = nt::DetuneHz(2.5f))
+                    const nt::OscillatorFrequency lfo_frequency, const nt::DetuneHz detune = nt::DetuneHz(constants::DEFAULT_DETUNE_HZ))
     {
         voice.set_start_frequency(start_frequency);
         voice.set_current_frequency(start_frequency);
@@ -305,8 +312,8 @@ namespace deepnote
             {
                 const nt::OscillatorFrequencyRange targetRange(
                     Range(
-                        nt::RangeLow(target_frequency.get() - 1.f),
-                        nt::RangeHigh(target_frequency.get() + 1.f)));
+                        nt::RangeLow(target_frequency.get() - constants::TARGET_FREQUENCY_TOLERANCE),
+                        nt::RangeHigh(target_frequency.get() + constants::TARGET_FREQUENCY_TOLERANCE)));
 
                 if (targetRange.get().contains(current_frequency.get()))
                 {
