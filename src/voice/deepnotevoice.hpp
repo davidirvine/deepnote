@@ -6,7 +6,7 @@
 #include "unitshapers/bezier.hpp"
 #include "oscfrequency.hpp"
 #include "Synthesis/oscillator.h"
-#include <vector>
+#include <array>
 
 namespace deepnote
 {
@@ -32,6 +32,7 @@ namespace deepnote
 
     struct DeepnoteVoice
     {
+        static constexpr size_t MAX_OSCILLATORS = 16;
         const float LFO_AMPLITUDE{0.5f};
 
         enum State
@@ -132,14 +133,13 @@ namespace deepnote
 
         void init_oscillators(const size_t count, nt::SampleRate sample_rate, nt::OscillatorFrequency start_frequency)
         {
-            oscillators.clear();
-            oscillators.resize(count);
-            for (auto &osc : oscillators)
+            oscillator_count = std::min(count, MAX_OSCILLATORS);
+            for (size_t i = 0; i < oscillator_count; ++i)
             {
-                osc.oscillator.Init(sample_rate.get());
-                osc.oscillator.SetWaveform(daisysp::Oscillator::WAVE_POLYBLEP_SAW);
-                osc.oscillator.SetFreq(start_frequency.get());
-                osc.detune_amount = 0.f;
+                oscillators[i].oscillator.Init(sample_rate.get());
+                oscillators[i].oscillator.SetWaveform(daisysp::Oscillator::WAVE_POLYBLEP_SAW);
+                oscillators[i].oscillator.SetFreq(start_frequency.get());
+                oscillators[i].detune_amount = 0.f;
             }
         }
 
@@ -148,30 +148,28 @@ namespace deepnote
             // If we only have one oscillator, we don't need to detune it
             // Otherwise distribute the either side of the fundamental frequency by an
             // integer muliples of detune.
-            const auto half = oscillators.size() / 2;
-            size_t i = 0;
-            for (auto &osc : oscillators)
+            const auto half = oscillator_count / 2;
+            for (size_t i = 0; i < oscillator_count; ++i)
             {
-                if (oscillators.size() <= 1)
+                if (oscillator_count <= 1)
                 {
-                    osc.detune_amount = 0.f;
+                    oscillators[i].detune_amount = 0.f;
                 }
                 else
                 {
                     const int8_t idx = i - half + ((i >= half) ? 1 : 0);
-                    osc.detune_amount = idx * detune.get();
+                    oscillators[i].detune_amount = idx * detune.get();
                 }
-                ++i;
             }
         }
 
         nt::OscillatorValue process_oscillators()
         {
             float osc_value{0.f};
-            for (auto &osc : oscillators)
+            for (size_t i = 0; i < oscillator_count; ++i)
             {
-                osc.oscillator.SetFreq(current_frequency.get() + osc.detune_amount);
-                osc_value += osc.oscillator.Process();
+                oscillators[i].oscillator.SetFreq(current_frequency.get() + oscillators[i].detune_amount);
+                osc_value += oscillators[i].oscillator.Process();
             }
             return nt::OscillatorValue(osc_value);
         }
@@ -187,7 +185,8 @@ namespace deepnote
         nt::OscillatorFrequency start_frequency{0.f};
         nt::OscillatorFrequency target_frequency{0.f};
         nt::OscillatorFrequency current_frequency{0.f};
-        std::vector<DetunedOscillator> oscillators{};
+        std::array<DetunedOscillator, MAX_OSCILLATORS> oscillators{};
+        size_t oscillator_count{0};
         nt::OscillatorFrequency lfo_base_freq{0.f};
         daisysp::Oscillator lfo;
     };
