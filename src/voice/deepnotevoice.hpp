@@ -283,7 +283,7 @@ nt::OscillatorFrequency calculate_shaped_frequency(DeepnoteVoice &voice, const n
     return nt::OscillatorFrequency(animationScaler(shaped_lfo_value.get()));
 }
 
-DeepnoteVoice::State update_voice_state(DeepnoteVoice &voice, const DeepnoteVoice::State current_state,
+DeepnoteVoice::State update_voice_state(const DeepnoteVoice &voice, const DeepnoteVoice::State current_state,
                                         const nt::OscillatorFrequency current_frequency)
 {
 
@@ -372,8 +372,8 @@ nt::OscillatorValue process_voice(DeepnoteVoice &voice, const nt::AnimationMulti
     }
 
     const auto start_frequency   = voice.get_start_frequency();
-    const auto target_frequency  = voice.get_target_frequency();
-    auto       current_frequency = voice.get_current_frequency();
+    const auto target_frequency = voice.get_target_frequency();
+    nt::OscillatorFrequency current_frequency(0.0f);
 
     if(state == DeepnoteVoice::AT_TARGET)
     {
