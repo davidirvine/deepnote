@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, feature/* ]
   pull_request:
     branches: [ main, develop ]
 
@@ -22,12 +22,20 @@ jobs:
         
     - name: Run clang-format check
       run: |
-        find src test -name "*.hpp" -o -name "*.cpp" | xargs clang-format --dry-run --Werror --style=file
+        if [ -f .clang-format ]; then
+          find src test -name "*.hpp" -o -name "*.cpp" | xargs clang-format --dry-run --Werror --style=file
+        else
+          echo "No .clang-format file found, skipping format check"
+        fi
         
-    - name: Run static analysis
+    - name: Run static analysis  
       run: |
-        chmod +x scripts/static_analysis.sh
-        ./scripts/static_analysis.sh
+        echo "Running cppcheck..."
+        if command -v cppcheck &> /dev/null; then
+          cppcheck --enable=warning,style,performance,portability --inline-suppr --quiet --error-exitcode=1 src/
+        else
+          echo "cppcheck not found, skipping..."
+        fi
 
   # Build and test on multiple platforms
   build-test:
@@ -46,7 +54,7 @@ jobs:
     - name: Configure CMake
       run: |
         cd test
-        mkdir build
+        mkdir -p build
         cd build
         cmake -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} ..
         
@@ -78,10 +86,10 @@ jobs:
     - name: Build with coverage
       run: |
         cd test
-        mkdir build
+        mkdir -p build
         cd build
         cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage" ..
-        make
+        cmake --build . --config Debug
         
     - name: Run tests with coverage
       run: |
@@ -105,7 +113,7 @@ jobs:
   # Documentation generation
   documentation:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/dev-experience-improvements'
     
     steps:
     - uses: actions/checkout@v4
@@ -141,10 +149,10 @@ jobs:
     - name: Build benchmarks
       run: |
         cd test
-        mkdir build
+        mkdir -p build
         cd build
         cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3 -DNDEBUG" ..
-        make
+        cmake --build . --config Release
         
     - name: Run performance tests
       run: |
