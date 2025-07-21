@@ -156,8 +156,10 @@ jobs:
       id: deployment
       uses: peaceiris/actions-gh-pages@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: docs/doxygen/docs/html
+        personal_token: ${{ secrets.PAT_TOKEN }}
+        publish_dir: docs/doxygen/docs
+        enable_jekyll: false
+        force_orphan: true
         
     # Alternative using official GitHub Pages action:
     # - name: Setup Pages
@@ -173,7 +175,7 @@ jobs:
   # Performance benchmarks
   benchmarks:
     runs-on: ubuntu-latest
-    if: contains(github.ref, 'develop') || contains(github.ref, 'fixing-cicd-pipeline') || github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
     
     steps:
     - uses: actions/checkout@v4
