@@ -21,7 +21,7 @@ template <unsigned int TABLE_HEIGHT, unsigned int TABLE_WIDTH> struct FrequencyT
     using TableType = std::array<std::array<FrequencyFunc, TABLE_WIDTH>, TABLE_HEIGHT>;
 
     FrequencyTable(const TableType &table) 
-        : freq_functions(table) 
+        : freq_functions(table)
     {
     }
 
