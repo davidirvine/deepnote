@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <array>
 #include <stdexcept>
+#include <string>
 
 namespace deepnote
 {
