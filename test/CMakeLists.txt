@@ -32,7 +32,21 @@ set_target_properties(tests PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
-target_compile_options(tests PRIVATE -g)
+# Enhanced compiler warnings and debugging options
+target_compile_options(tests PRIVATE 
+    -Wall 
+    -Wextra 
+    -Wpedantic 
+    -Werror
+    -Wno-unused-parameter  # DaisySP has many unused parameters
+    $<$<CONFIG:Debug>:-g -O0 -fsanitize=address -fsanitize=undefined>
+    $<$<CONFIG:Release>:-O3 -DNDEBUG>
+)
+
+# Link sanitizers in debug mode
+target_link_options(tests PRIVATE
+    $<$<CONFIG:Debug>:-fsanitize=address -fsanitize=undefined>
+)
 
 add_test(NAME tests COMMAND tests)
 enable_testing()

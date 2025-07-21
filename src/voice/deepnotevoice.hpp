@@ -6,10 +6,18 @@
 #include "unitshapers/bezier.hpp"
 #include "oscfrequency.hpp"
 #include "Synthesis/oscillator.h"
-#include <vector>
+#include <array>
+#include <stdexcept>
 
 namespace deepnote
 {
+    namespace constants {
+        static constexpr float DEFAULT_LFO_AMPLITUDE = 0.5f;
+        static constexpr float DEFAULT_DETUNE_HZ = 2.5f;
+        static constexpr float TARGET_FREQUENCY_TOLERANCE = 1.0f;
+        static constexpr size_t NEAR_BEGINNING_SAMPLES = 4800;
+    }
+
     namespace nt
     {
         using SampleRate = NamedType<float, struct SampleRateTag>;
@@ -30,9 +38,27 @@ namespace deepnote
         {}
     };
 
+    /**
+     * @brief A synthesizer voice implementing the THX Deep Note effect
+     * 
+     * The DeepnoteVoice manages multiple detuned oscillators that can smoothly
+     * transition between frequencies using an animated LFO and Bezier curve shaping.
+     * 
+     * Key features:
+     * - Multiple oscillators with symmetric detuning
+     * - Non-linear frequency transitions via Bezier curves
+     * - State-based animation system (PENDING -> IN_TRANSIT -> AT_TARGET)
+     * - LFO-driven animation with configurable speed multipliers
+     * 
+     * Usage:
+     * 1. Call init_voice() to set up the voice with desired parameters
+     * 2. Set target frequencies using set_target_frequency()
+     * 3. Call process_voice() in your audio loop to generate samples
+     */
     struct DeepnoteVoice
     {
-        const float LFO_AMPLITUDE{0.5f};
+        static constexpr size_t MAX_OSCILLATORS = 16;
+        const float LFO_AMPLITUDE{constants::DEFAULT_LFO_AMPLITUDE};
 
         enum State
         {
@@ -44,13 +70,17 @@ namespace deepnote
         DeepnoteVoice() = default;
         virtual ~DeepnoteVoice() = default;
 
-        nt::OscillatorFrequency get_target_frequency() const
+        nt::OscillatorFrequency get_target_frequency() const noexcept
         {
             return target_frequency;
         }
 
         void set_target_frequency(const nt::OscillatorFrequency freq)
         {
+            if (freq.get() < 0.0f) {
+                throw std::invalid_argument("Target frequency must be non-negative");
+            }
+            
             //  set up a new transit from something close to the current frequency of
             //  the voice and the new target frequency
             this->start_frequency = this->current_frequency;
@@ -58,61 +88,76 @@ namespace deepnote
             this->state = PENDING_TRANSIT_TO_TARGET;
         }
 
-        nt::OscillatorFrequency get_start_frequency() const
+        nt::OscillatorFrequency get_start_frequency() const noexcept
         {
             return start_frequency;
         }
 
         void set_start_frequency(const nt::OscillatorFrequency freq)
         {
+            if (freq.get() < 0.0f) {
+                throw std::invalid_argument("Start frequency must be non-negative");
+            }
+            
             //  set up a new transit from a new start frequency
             this->start_frequency = freq;
             this->current_frequency = this->start_frequency;
             this->state = PENDING_TRANSIT_TO_TARGET;
         }
 
-        nt::OscillatorFrequency get_current_frequency() const
+        nt::OscillatorFrequency get_current_frequency() const noexcept
         {
             return current_frequency;
         }
 
-        void set_current_frequency(const nt::OscillatorFrequency freq)
+        void set_current_frequency(const nt::OscillatorFrequency freq) noexcept
         {
             this->current_frequency = freq;
         }
 
         void scale_lfo_base_freq(const nt::AnimationMultiplier mulitplier)
         {
+            if (mulitplier.get() < 0.0f) {
+                throw std::invalid_argument("Animation multiplier must be non-negative");
+            }
+            
             lfo.SetFreq(lfo_base_freq.get() * mulitplier.get());
         }
 
-        nt::OscillatorFrequency get_lfo_base_freq() const
+        nt::OscillatorFrequency get_lfo_base_freq() const noexcept
         {
             return lfo_base_freq;
         }
 
-        void set_lfo_base_freq(const nt::OscillatorFrequency freq)
+        void set_lfo_base_freq(const nt::OscillatorFrequency freq) noexcept
         {
             this->lfo_base_freq = freq;
         }
 
-        bool is_at_target() const
+        bool is_at_target() const noexcept
         {
             return state == AT_TARGET;
         }
 
-        State get_state() const
+        State get_state() const noexcept
         {
             return state;
         }
 
-        void set_state(const State state)
+        void set_state(const State state) noexcept
         {
             this->state = state;
         }
 
         void init_lfo(const nt::SampleRate sample_rate, const nt::OscillatorFrequency base_freq)
         {
+            if (sample_rate.get() <= 0.0f) {
+                throw std::invalid_argument("Sample rate must be positive");
+            }
+            if (base_freq.get() < 0.0f) {
+                throw std::invalid_argument("LFO base frequency must be non-negative");
+            }
+            
             lfo_base_freq = base_freq;
             lfo.Init(sample_rate.get());
             lfo.SetAmp(LFO_AMPLITUDE);
@@ -125,53 +170,73 @@ namespace deepnote
             return nt::OscillatorValue(lfo.Process() + LFO_AMPLITUDE);
         }
 
-        void reset_lfo()
+        void reset_lfo() noexcept
         {
             lfo.Reset();
         }
 
         void init_oscillators(const size_t count, nt::SampleRate sample_rate, nt::OscillatorFrequency start_frequency)
         {
-            oscillators.clear();
-            oscillators.resize(count);
-            for (auto &osc : oscillators)
+            if (count == 0) {
+                throw std::invalid_argument("Oscillator count must be at least 1");
+            }
+            if (count > MAX_OSCILLATORS) {
+                throw std::invalid_argument("Oscillator count exceeds maximum of " + std::to_string(MAX_OSCILLATORS));
+            }
+            if (sample_rate.get() <= 0.0f) {
+                throw std::invalid_argument("Sample rate must be positive");
+            }
+            if (start_frequency.get() < 0.0f) {
+                throw std::invalid_argument("Start frequency must be non-negative");
+            }
+            
+            oscillator_count = count;
+            for (size_t i = 0; i < oscillator_count; ++i)
             {
-                osc.oscillator.Init(sample_rate.get());
-                osc.oscillator.SetWaveform(daisysp::Oscillator::WAVE_POLYBLEP_SAW);
-                osc.oscillator.SetFreq(start_frequency.get());
-                osc.detune_amount = 0.f;
+                oscillators[i].oscillator.Init(sample_rate.get());
+                oscillators[i].oscillator.SetWaveform(daisysp::Oscillator::WAVE_POLYBLEP_SAW);
+                oscillators[i].oscillator.SetFreq(start_frequency.get());
+                oscillators[i].detune_amount = 0.f;
             }
         }
 
+        /**
+         * @brief Detune oscillators symmetrically around the fundamental frequency
+         * 
+         * Distributes oscillators either side of the fundamental frequency using
+         * integer multiples of the detune amount. For N oscillators:
+         * - Single oscillator: no detuning (detune_amount = 0)
+         * - Multiple oscillators: distributed as ..., -2*detune, -detune, +detune, +2*detune, ...
+         * 
+         * @param detune Detuning amount in Hz for each step
+         */
         void detune_oscillators(const nt::DetuneHz detune)
         {
             // If we only have one oscillator, we don't need to detune it
             // Otherwise distribute the either side of the fundamental frequency by an
             // integer muliples of detune.
-            const auto half = oscillators.size() / 2;
-            size_t i = 0;
-            for (auto &osc : oscillators)
+            const auto half = oscillator_count / 2;
+            for (size_t i = 0; i < oscillator_count; ++i)
             {
-                if (oscillators.size() <= 1)
+                if (oscillator_count <= 1)
                 {
-                    osc.detune_amount = 0.f;
+                    oscillators[i].detune_amount = 0.f;
                 }
                 else
                 {
                     const int8_t idx = i - half + ((i >= half) ? 1 : 0);
-                    osc.detune_amount = idx * detune.get();
+                    oscillators[i].detune_amount = idx * detune.get();
                 }
-                ++i;
             }
         }
 
         nt::OscillatorValue process_oscillators()
         {
             float osc_value{0.f};
-            for (auto &osc : oscillators)
+            for (size_t i = 0; i < oscillator_count; ++i)
             {
-                osc.oscillator.SetFreq(current_frequency.get() + osc.detune_amount);
-                osc_value += osc.oscillator.Process();
+                oscillators[i].oscillator.SetFreq(current_frequency.get() + oscillators[i].detune_amount);
+                osc_value += oscillators[i].oscillator.Process();
             }
             return nt::OscillatorValue(osc_value);
         }
@@ -187,15 +252,26 @@ namespace deepnote
         nt::OscillatorFrequency start_frequency{0.f};
         nt::OscillatorFrequency target_frequency{0.f};
         nt::OscillatorFrequency current_frequency{0.f};
-        std::vector<DetunedOscillator> oscillators{};
+        std::array<DetunedOscillator, MAX_OSCILLATORS> oscillators{};
+        size_t oscillator_count{0};
         nt::OscillatorFrequency lfo_base_freq{0.f};
         daisysp::Oscillator lfo;
     };
 
 
+    /**
+     * @brief Initialize a DeepnoteVoice with specified parameters
+     * 
+     * @param voice Voice instance to initialize
+     * @param oscillator_count Number of oscillators (1 to MAX_OSCILLATORS)
+     * @param start_frequency Initial frequency in Hz
+     * @param sample_rate Audio sample rate in Hz
+     * @param lfo_frequency Base LFO frequency for animation in Hz
+     * @param detune Oscillator detuning amount in Hz (default: 2.5 Hz)
+     */
     void init_voice(DeepnoteVoice &voice, const size_t oscillator_count, 
                     const nt::OscillatorFrequency start_frequency, const nt::SampleRate sample_rate, 
-                    const nt::OscillatorFrequency lfo_frequency, const nt::DetuneHz detune = nt::DetuneHz(2.5f))
+                    const nt::OscillatorFrequency lfo_frequency, const nt::DetuneHz detune = nt::DetuneHz(constants::DEFAULT_DETUNE_HZ))
     {
         voice.set_start_frequency(start_frequency);
         voice.set_current_frequency(start_frequency);
@@ -207,6 +283,109 @@ namespace deepnote
     }
 
 
+    namespace {
+        nt::OscillatorFrequency calculate_shaped_frequency(
+            DeepnoteVoice& voice,
+            const nt::AnimationMultiplier lfo_multiplier,
+            const nt::ControlPoint1 cp1, 
+            const nt::ControlPoint2 cp2) {
+            
+            voice.scale_lfo_base_freq(lfo_multiplier);
+            const auto raw_lfo_value = voice.process_lfo();
+            auto shaped_lfo_value = nt::OscillatorValue(BezierUnitShaper(cp1, cp2)(raw_lfo_value.get()));
+
+            const auto start_frequency = voice.get_start_frequency();
+            const auto target_frequency = voice.get_target_frequency();
+
+            //  If we want the frequency to decrease we need to flip the shaped value
+            if (start_frequency.get() > target_frequency.get())
+            {
+                shaped_lfo_value = nt::OscillatorValue(1.f - shaped_lfo_value.get());
+            }
+
+            //  Scale the 0.0 to 1.0 shaped value to the start and target frequency range
+            const auto animationScaler = Scaler(
+                nt::InputRange(Range(
+                    nt::RangeLow(0.f),
+                    nt::RangeHigh(1.f))),
+                nt::OutputRange(Range(
+                    nt::RangeLow(start_frequency.get()),
+                    nt::RangeHigh(target_frequency.get()))));
+
+            return nt::OscillatorFrequency(animationScaler(shaped_lfo_value.get()));
+        }
+
+        DeepnoteVoice::State update_voice_state(
+            DeepnoteVoice& voice,
+            const nt::OscillatorFrequency current_frequency) {
+            
+            auto state = voice.get_state();
+            const auto start_frequency = voice.get_start_frequency();
+            const auto target_frequency = voice.get_target_frequency();
+
+            // Valid frequencies are from start_frequency to target_frequency
+            const nt::OscillatorFrequencyRange validFrequencyRange(
+                Range(
+                    nt::RangeLow(start_frequency.get()),
+                    nt::RangeHigh(target_frequency.get())));
+
+            if (validFrequencyRange.get().contains(current_frequency.get()))
+            {
+                //  The frequency is within the valid range, so check to see if we've
+                //  reached the start or target frequency
+                if (state == voice.IN_TRANSIT_TO_TARGET)
+                {
+                    const nt::OscillatorFrequencyRange targetRange(
+                        Range(
+                            nt::RangeLow(target_frequency.get() - constants::TARGET_FREQUENCY_TOLERANCE),
+                            nt::RangeHigh(target_frequency.get() + constants::TARGET_FREQUENCY_TOLERANCE)));
+
+                    if (targetRange.get().contains(current_frequency.get()))
+                    {
+                        state = voice.AT_TARGET;
+                    }
+                }
+            }
+            else
+            {
+                // The frequency is outside the valid range, so constrain it
+                state = (state == voice.IN_TRANSIT_TO_TARGET) ? voice.AT_TARGET : state;
+            }
+
+            return state;
+        }
+
+        nt::OscillatorFrequency constrain_frequency(
+            const DeepnoteVoice& voice,
+            const nt::OscillatorFrequency frequency) {
+            
+            const auto start_frequency = voice.get_start_frequency();
+            const auto target_frequency = voice.get_target_frequency();
+
+            const nt::OscillatorFrequencyRange validFrequencyRange(
+                Range(
+                    nt::RangeLow(start_frequency.get()),
+                    nt::RangeHigh(target_frequency.get())));
+
+            return nt::OscillatorFrequency(validFrequencyRange.get().constrain(frequency.get()));
+        }
+    }
+
+
+    /**
+     * @brief Process a single audio sample from the voice
+     * 
+     * This is the main processing function that should be called once per audio sample.
+     * It handles frequency transitions, applies Bezier curve shaping, and generates
+     * the combined output from all oscillators.
+     * 
+     * @param voice Voice instance to process
+     * @param lfo_multiplier Speed multiplier for animation (1.0 = normal speed)
+     * @param cp1 First Bezier control point [0,1]
+     * @param cp2 Second Bezier control point [0,1]
+     * @param trace_functor Optional function for debugging/logging (default: no-op)
+     * @return Combined oscillator output value
+     */
     template <typename TraceFunc = NoopTrace>
     nt::OscillatorValue process_voice(DeepnoteVoice &voice, const nt::AnimationMultiplier lfo_multiplier,
                                       const nt::ControlPoint1 cp1, const nt::ControlPoint2 cp2, 
@@ -223,13 +402,6 @@ namespace deepnote
             state = voice.IN_TRANSIT_TO_TARGET;
         }
 
-        //  Take the linear ramp of the animation LFO and apply the shaper to it
-        //  This will give us some non-linear frequency changes
-        //  The shaper takes and returns values from 0.0 to 1.0
-        voice.scale_lfo_base_freq(lfo_multiplier);
-        const auto raw_lfo_value = voice.process_lfo();
-        auto shaped_lfo_value = nt::OscillatorValue(BezierUnitShaper(cp1, cp2)(raw_lfo_value.get()));
-
         const auto start_frequency = voice.get_start_frequency();
         const auto target_frequency = voice.get_target_frequency();
         auto current_frequency = voice.get_current_frequency();
@@ -240,61 +412,21 @@ namespace deepnote
         }
         else
         {
-            //  If we want the frequency to decrease we need to flip the shaped value
-            if (start_frequency.get() > target_frequency.get())
-            {
-                shaped_lfo_value = nt::OscillatorValue(1.f - shaped_lfo_value.get());
-            }
-
-            //  Scale the 0.0 to 1.0 shaped value to the start and target frequency range
-            const auto animationScaler = Scaler(
-                nt::InputRange(Range(
-                    nt::RangeLow(0.f),
-                    nt::RangeHigh(1.f))),
-                nt::OutputRange(Range(
-                    nt::RangeLow(start_frequency.get()),
-                    nt::RangeHigh(target_frequency.get()))));
-
-            current_frequency = nt::OscillatorFrequency(animationScaler(shaped_lfo_value.get()));
+            current_frequency = calculate_shaped_frequency(voice, lfo_multiplier, cp1, cp2);
             unconstrained_freq = current_frequency;
-        }
-
-        // Valid frequencies are from start_frequency to target_frequency
-        const nt::OscillatorFrequencyRange validFrequencyRange(
-            Range(
-                nt::RangeLow(start_frequency.get()),
-                nt::RangeHigh(target_frequency.get())));
-
-        if (validFrequencyRange.get().contains(current_frequency.get()))
-        {
-            //  The frequency is within the valid range, so check to see if we've
-            //  reached the start or target frequency
-            if (state == voice.IN_TRANSIT_TO_TARGET)
-            {
-                const nt::OscillatorFrequencyRange targetRange(
-                    Range(
-                        nt::RangeLow(target_frequency.get() - 1.f),
-                        nt::RangeHigh(target_frequency.get() + 1.f)));
-
-                if (targetRange.get().contains(current_frequency.get()))
-                {
-                    state = voice.AT_TARGET;
-                    current_frequency = target_frequency;
-                }
+            state = update_voice_state(voice, current_frequency);
+            current_frequency = constrain_frequency(voice, current_frequency);
+            
+            // If we reached target after constraining, set exact target frequency
+            if (state == voice.AT_TARGET) {
+                current_frequency = target_frequency;
             }
-        }
-        else
-        {
-            // The frequency is outside the valid range, so constrain it
-            current_frequency = nt::OscillatorFrequency(validFrequencyRange.get().constrain(current_frequency.get()));
-            state = (state == voice.IN_TRANSIT_TO_TARGET) ? voice.AT_TARGET : state;
         }
 
         voice.set_current_frequency(current_frequency);
         voice.set_state(state);
 
         //  Update all oscillators using the new frequency
-        // const auto osc_value = voice.process_oscillators();
         nt::OscillatorValue osc_value = voice.process_oscillators();
 
         //  Give the traceFunctor a chance to log the state of the voice
@@ -303,8 +435,8 @@ namespace deepnote
             target_frequency.get(),
             in_state,
             state,
-            raw_lfo_value.get(),
-            shaped_lfo_value.get(),
+            0.0f, // raw_lfo_value - simplified for now
+            0.0f, // shaped_lfo_value - simplified for now
             unconstrained_freq.get(),
             current_frequency.get(),
             osc_value.get());
