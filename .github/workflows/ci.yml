@@ -7,6 +7,17 @@ on:
     branches: [ main, develop ]
 
 jobs:
+  # Debug job to see what branch info we have
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Debug branch info
+      run: |
+        echo "github.ref: ${{ github.ref }}"
+        echo "github.ref_name: ${{ github.ref_name }}"
+        echo "github.head_ref: ${{ github.head_ref }}"
+        echo "Event name: ${{ github.event_name }}"
+
   # Code quality checks
   code-quality:
     runs-on: ubuntu-latest
@@ -77,7 +88,7 @@ jobs:
   # Code coverage (Linux only)
   coverage:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/fixing-cicd-pipeline'
+    # Temporarily removed condition for testing
     
     steps:
     - uses: actions/checkout@v4
@@ -119,7 +130,7 @@ jobs:
   # Documentation generation
   documentation:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/dev-experience-improvements' || github.ref == 'refs/heads/fixing-cicd-pipeline'
+    # Temporarily removed condition for testing
     
     steps:
     - uses: actions/checkout@v4
@@ -145,7 +156,7 @@ jobs:
   # Performance benchmarks
   benchmarks:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/fixing-cicd-pipeline'
+    if: contains(github.ref, 'develop') || contains(github.ref, 'fixing-cicd-pipeline') || github.ref == 'refs/heads/main'
     
     steps:
     - uses: actions/checkout@v4
