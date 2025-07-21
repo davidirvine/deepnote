@@ -9,44 +9,11 @@ permissions:
 
 on:
   push:
-    branches: [ main, develop, feature/* ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
 
 jobs:
-  # Debug job to see what branch info we have
-  debug:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Debug branch info
-      run: |
-        echo "github.ref: ${{ github.ref }}"
-        echo "github.ref_name: ${{ github.ref_name }}"
-        echo "github.head_ref: ${{ github.head_ref }}"
-        echo "Event name: ${{ github.event_name }}"
-        
-    - name: Debug secrets and permissions
-      run: |
-        echo "=== Secrets Check ==="
-        if [ -n "${{ secrets.CODECOV_TOKEN }}" ]; then
-          echo "CODECOV_TOKEN: ✅ Set (length: ${#CODECOV_TOKEN})"
-        else
-          echo "CODECOV_TOKEN: ❌ Not set or empty"
-        fi
-        
-        if [ -n "${{ secrets.GITHUB_TOKEN }}" ]; then
-          echo "GITHUB_TOKEN: ✅ Available"
-        else
-          echo "GITHUB_TOKEN: ❌ Not available"
-        fi
-        
-        echo "=== Permissions Check ==="
-        echo "Repository: ${{ github.repository }}"
-        echo "Actor: ${{ github.actor }}"
-        echo "Event: ${{ github.event_name }}"
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
   # Code quality checks
   code-quality:
     runs-on: ubuntu-latest
@@ -117,7 +84,7 @@ jobs:
   # Code coverage (Linux only)
   coverage:
     runs-on: ubuntu-latest
-    # Temporarily removed condition for testing
+    if: github.ref == 'refs/heads/develop'
     
     steps:
     - uses: actions/checkout@v4
@@ -150,18 +117,22 @@ jobs:
         lcov --remove coverage.info '*/thirdparty/*' --output-file coverage.info
         lcov --list coverage.info
         
-    - name: Upload to Codecov
-      if: ${{ secrets.CODECOV_TOKEN != '' }}
-      uses: codecov/codecov-action@v3
+    - name: Upload to Codecov (disabled - repository setup needed)
+      if: false  # Temporarily disabled until repository is set up in Codecov
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      uses: codecov/codecov-action@v4
       with:
         file: test/build/coverage.info
         token: ${{ secrets.CODECOV_TOKEN }}
+        slug: davidirvine/deepnote
         fail_ci_if_error: false
+        verbose: true
 
   # Documentation generation
   documentation:
     runs-on: ubuntu-latest
-    # Temporarily removed condition for testing
+    if: github.ref == 'refs/heads/develop'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
