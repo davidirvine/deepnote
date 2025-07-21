@@ -4,7 +4,7 @@ PROJECT_NAME           = "Deepnote Synthesizer Voice Library"
 PROJECT_NUMBER         = "v1.0.0"
 PROJECT_BRIEF          = "A C++14 header-only library implementing the THX Deep Note effect"
 
-OUTPUT_DIRECTORY       = docs/html
+OUTPUT_DIRECTORY       = docs/
 CREATE_SUBDIRS         = NO
 
 INPUT                  = ../../src/ mainpage.md
@@ -29,7 +29,6 @@ EXTRACT_ALL            = NO
 EXTRACT_PRIVATE        = NO
 EXTRACT_STATIC         = NO
 
-CLASS_DIAGRAMS         = YES
 HAVE_DOT               = NO
 
 JAVADOC_AUTOBRIEF      = YES

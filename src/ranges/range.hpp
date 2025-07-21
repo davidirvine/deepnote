@@ -5,71 +5,62 @@
 namespace deepnote
 {
 
-    namespace nt
+namespace nt
+{
+using RangeLow  = NamedType<float, struct RangeLowTag>;
+using RangeHigh = NamedType<float, struct RangeHighTag>;
+}; // namespace nt
+
+struct Range
+{
+    Range()
+        : low(0.f)
+        , high(0.f)
     {
-        using RangeLow = NamedType<float, struct RangeLowTag>;
-        using RangeHigh = NamedType<float, struct RangeHighTag>;
-    };
+    }
 
-    struct Range
+    explicit Range(nt::RangeLow low, nt::RangeHigh high)
+        : low(low.get() < high.get() ? low.get() : high.get())
+        , high(high.get() > low.get() ? high.get() : low.get())
     {
-        Range() : low(0.f),
-                  high(0.f)
-        {
-        }
+    }
 
-        explicit Range(nt::RangeLow low, nt::RangeHigh high) : low(low.get() < high.get() ? low.get() : high.get()),
-                                                               high(high.get() > low.get() ? high.get() : low.get())
-        {
-        }
+    Range(const Range &other)
+        : low(other.low)
+        , high(other.high)
+    {
+    }
 
-        Range(const Range &other) : low(other.low),
-                                    high(other.high)
+    Range &operator=(const Range &other)
+    {
+        if(this != &other)
         {
+            low  = other.low;
+            high = other.high;
         }
+        return *this;
+    }
 
-        Range &operator=(const Range &other)
-        {
-            if (this != &other)
-            {
-                low = other.low;
-                high = other.high;
-            }
-            return *this;
-        }
+    nt::RangeLow get_low() const noexcept { return low; }
 
-        nt::RangeLow get_low() const noexcept
-        {
-            return low;
-        }
+    nt::RangeHigh get_high() const noexcept { return high; }
 
-        nt::RangeHigh get_high() const noexcept
-        {
-            return high;
-        }
+    float length() const noexcept { return high.get() - low.get(); }
 
-        float length() const noexcept
-        {
-            return high.get() - low.get();
-        }
+    bool contains(float value) const noexcept { return value >= low.get() && value <= high.get(); }
 
-        bool contains(float value) const noexcept
-        {
-            return value >= low.get() && value <= high.get();
-        }
+    float constrain(float value) const noexcept
+    {
+        if(value < low.get())
+            return low.get();
+        if(value > high.get())
+            return high.get();
+        return value;
+    }
 
-        float constrain(float value) const noexcept
-        {
-            if (value < low.get())
-                return low.get();
-            if (value > high.get())
-                return high.get();
-            return value;
-        }
-
-    private:
-        nt::RangeLow low;
-        nt::RangeHigh high;
-    };
+  private:
+    nt::RangeLow  low;
+    nt::RangeHigh high;
+};
 
 } // namespace deepnote
