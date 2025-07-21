@@ -9,7 +9,7 @@ permissions:
 
 on:
   push:
-    branches: [ main, develop, feature/* ]
+    branches: [ main, develop, feature/*, fixing-* ]
   pull_request:
     branches: [ main, develop ]
 
@@ -26,15 +26,18 @@ jobs:
         echo "Event name: ${{ github.event_name }}"
         
     - name: Debug secrets and permissions
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         echo "=== Secrets Check ==="
-        if [ -n "${{ secrets.CODECOV_TOKEN }}" ]; then
+        if [ -n "$CODECOV_TOKEN" ]; then
           echo "CODECOV_TOKEN: ✅ Set (length: ${#CODECOV_TOKEN})"
         else
           echo "CODECOV_TOKEN: ❌ Not set or empty"
         fi
         
-        if [ -n "${{ secrets.GITHUB_TOKEN }}" ]; then
+        if [ -n "$GITHUB_TOKEN" ]; then
           echo "GITHUB_TOKEN: ✅ Available"
         else
           echo "GITHUB_TOKEN: ❌ Not available"
@@ -151,7 +154,9 @@ jobs:
         lcov --list coverage.info
         
     - name: Upload to Codecov
-      if: ${{ secrets.CODECOV_TOKEN != '' }}
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      if: env.CODECOV_TOKEN != ''
       uses: codecov/codecov-action@v3
       with:
         file: test/build/coverage.info
