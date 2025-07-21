@@ -8,6 +8,7 @@
 #include "Synthesis/oscillator.h"
 #include <array>
 #include <stdexcept>
+#include <algorithm>
 
 namespace deepnote
 {
@@ -317,39 +318,44 @@ namespace deepnote
 
         DeepnoteVoice::State update_voice_state(
             DeepnoteVoice& voice,
+            const DeepnoteVoice::State current_state,
             const nt::OscillatorFrequency current_frequency) {
             
-            auto state = voice.get_state();
+            auto state = current_state;
             const auto start_frequency = voice.get_start_frequency();
             const auto target_frequency = voice.get_target_frequency();
 
             // Valid frequencies are from start_frequency to target_frequency
-            const nt::OscillatorFrequencyRange validFrequencyRange(
-                Range(
-                    nt::RangeLow(start_frequency.get()),
-                    nt::RangeHigh(target_frequency.get())));
+            // Range constructor ensures low <= high, so we need to handle both directions
+            const auto freq_low = std::min(start_frequency.get(), target_frequency.get());
+            const auto freq_high = std::max(start_frequency.get(), target_frequency.get());
+            
+            const auto validFrequencyRange = nt::OscillatorFrequencyRange{
+                Range{
+                    nt::RangeLow(freq_low),
+                    nt::RangeHigh(freq_high)}};
 
             if (validFrequencyRange.get().contains(current_frequency.get()))
             {
                 //  The frequency is within the valid range, so check to see if we've
                 //  reached the start or target frequency
-                if (state == voice.IN_TRANSIT_TO_TARGET)
+                if (state == DeepnoteVoice::IN_TRANSIT_TO_TARGET)
                 {
-                    const nt::OscillatorFrequencyRange targetRange(
-                        Range(
+                    const auto targetRange = nt::OscillatorFrequencyRange{
+                        Range{
                             nt::RangeLow(target_frequency.get() - constants::TARGET_FREQUENCY_TOLERANCE),
-                            nt::RangeHigh(target_frequency.get() + constants::TARGET_FREQUENCY_TOLERANCE)));
+                            nt::RangeHigh(target_frequency.get() + constants::TARGET_FREQUENCY_TOLERANCE)}};
 
                     if (targetRange.get().contains(current_frequency.get()))
                     {
-                        state = voice.AT_TARGET;
+                        state = DeepnoteVoice::AT_TARGET;
                     }
                 }
             }
             else
             {
                 // The frequency is outside the valid range, so constrain it
-                state = (state == voice.IN_TRANSIT_TO_TARGET) ? voice.AT_TARGET : state;
+                state = (state == DeepnoteVoice::IN_TRANSIT_TO_TARGET) ? DeepnoteVoice::AT_TARGET : state;
             }
 
             return state;
@@ -362,10 +368,14 @@ namespace deepnote
             const auto start_frequency = voice.get_start_frequency();
             const auto target_frequency = voice.get_target_frequency();
 
-            const nt::OscillatorFrequencyRange validFrequencyRange(
-                Range(
-                    nt::RangeLow(start_frequency.get()),
-                    nt::RangeHigh(target_frequency.get())));
+            // Range constructor ensures low <= high, so we need to handle both directions
+            const auto freq_low = std::min(start_frequency.get(), target_frequency.get());
+            const auto freq_high = std::max(start_frequency.get(), target_frequency.get());
+
+            const auto validFrequencyRange = nt::OscillatorFrequencyRange{
+                Range{
+                    nt::RangeLow(freq_low),
+                    nt::RangeHigh(freq_high)}};
 
             return nt::OscillatorFrequency(validFrequencyRange.get().constrain(frequency.get()));
         }
@@ -396,17 +406,17 @@ namespace deepnote
         auto state = in_state;
 
         //  if we in a pending state, reset the animation LFO and move to the next state
-        if (state == voice.PENDING_TRANSIT_TO_TARGET)
+        if (state == DeepnoteVoice::PENDING_TRANSIT_TO_TARGET)
         {
             voice.reset_lfo();
-            state = voice.IN_TRANSIT_TO_TARGET;
+            state = DeepnoteVoice::IN_TRANSIT_TO_TARGET;
         }
 
         const auto start_frequency = voice.get_start_frequency();
         const auto target_frequency = voice.get_target_frequency();
         auto current_frequency = voice.get_current_frequency();
 
-        if (state == voice.AT_TARGET)
+        if (state == DeepnoteVoice::AT_TARGET)
         {
             current_frequency = target_frequency;
         }
@@ -414,11 +424,11 @@ namespace deepnote
         {
             current_frequency = calculate_shaped_frequency(voice, lfo_multiplier, cp1, cp2);
             unconstrained_freq = current_frequency;
-            state = update_voice_state(voice, current_frequency);
+            state = update_voice_state(voice, state, current_frequency);
             current_frequency = constrain_frequency(voice, current_frequency);
             
             // If we reached target after constraining, set exact target frequency
-            if (state == voice.AT_TARGET) {
+            if (state == DeepnoteVoice::AT_TARGET) {
                 current_frequency = target_frequency;
             }
         }
