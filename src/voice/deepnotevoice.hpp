@@ -246,6 +246,95 @@ namespace deepnote
     }
 
 
+    namespace {
+        nt::OscillatorFrequency calculate_shaped_frequency(
+            DeepnoteVoice& voice,
+            const nt::AnimationMultiplier lfo_multiplier,
+            const nt::ControlPoint1 cp1, 
+            const nt::ControlPoint2 cp2) {
+            
+            voice.scale_lfo_base_freq(lfo_multiplier);
+            const auto raw_lfo_value = voice.process_lfo();
+            auto shaped_lfo_value = nt::OscillatorValue(BezierUnitShaper(cp1, cp2)(raw_lfo_value.get()));
+
+            const auto start_frequency = voice.get_start_frequency();
+            const auto target_frequency = voice.get_target_frequency();
+
+            //  If we want the frequency to decrease we need to flip the shaped value
+            if (start_frequency.get() > target_frequency.get())
+            {
+                shaped_lfo_value = nt::OscillatorValue(1.f - shaped_lfo_value.get());
+            }
+
+            //  Scale the 0.0 to 1.0 shaped value to the start and target frequency range
+            const auto animationScaler = Scaler(
+                nt::InputRange(Range(
+                    nt::RangeLow(0.f),
+                    nt::RangeHigh(1.f))),
+                nt::OutputRange(Range(
+                    nt::RangeLow(start_frequency.get()),
+                    nt::RangeHigh(target_frequency.get()))));
+
+            return nt::OscillatorFrequency(animationScaler(shaped_lfo_value.get()));
+        }
+
+        DeepnoteVoice::State update_voice_state(
+            DeepnoteVoice& voice,
+            const nt::OscillatorFrequency current_frequency) {
+            
+            auto state = voice.get_state();
+            const auto start_frequency = voice.get_start_frequency();
+            const auto target_frequency = voice.get_target_frequency();
+
+            // Valid frequencies are from start_frequency to target_frequency
+            const nt::OscillatorFrequencyRange validFrequencyRange(
+                Range(
+                    nt::RangeLow(start_frequency.get()),
+                    nt::RangeHigh(target_frequency.get())));
+
+            if (validFrequencyRange.get().contains(current_frequency.get()))
+            {
+                //  The frequency is within the valid range, so check to see if we've
+                //  reached the start or target frequency
+                if (state == voice.IN_TRANSIT_TO_TARGET)
+                {
+                    const nt::OscillatorFrequencyRange targetRange(
+                        Range(
+                            nt::RangeLow(target_frequency.get() - constants::TARGET_FREQUENCY_TOLERANCE),
+                            nt::RangeHigh(target_frequency.get() + constants::TARGET_FREQUENCY_TOLERANCE)));
+
+                    if (targetRange.get().contains(current_frequency.get()))
+                    {
+                        state = voice.AT_TARGET;
+                    }
+                }
+            }
+            else
+            {
+                // The frequency is outside the valid range, so constrain it
+                state = (state == voice.IN_TRANSIT_TO_TARGET) ? voice.AT_TARGET : state;
+            }
+
+            return state;
+        }
+
+        nt::OscillatorFrequency constrain_frequency(
+            const DeepnoteVoice& voice,
+            const nt::OscillatorFrequency frequency) {
+            
+            const auto start_frequency = voice.get_start_frequency();
+            const auto target_frequency = voice.get_target_frequency();
+
+            const nt::OscillatorFrequencyRange validFrequencyRange(
+                Range(
+                    nt::RangeLow(start_frequency.get()),
+                    nt::RangeHigh(target_frequency.get())));
+
+            return nt::OscillatorFrequency(validFrequencyRange.get().constrain(frequency.get()));
+        }
+    }
+
+
     template <typename TraceFunc = NoopTrace>
     nt::OscillatorValue process_voice(DeepnoteVoice &voice, const nt::AnimationMultiplier lfo_multiplier,
                                       const nt::ControlPoint1 cp1, const nt::ControlPoint2 cp2, 
@@ -262,13 +351,6 @@ namespace deepnote
             state = voice.IN_TRANSIT_TO_TARGET;
         }
 
-        //  Take the linear ramp of the animation LFO and apply the shaper to it
-        //  This will give us some non-linear frequency changes
-        //  The shaper takes and returns values from 0.0 to 1.0
-        voice.scale_lfo_base_freq(lfo_multiplier);
-        const auto raw_lfo_value = voice.process_lfo();
-        auto shaped_lfo_value = nt::OscillatorValue(BezierUnitShaper(cp1, cp2)(raw_lfo_value.get()));
-
         const auto start_frequency = voice.get_start_frequency();
         const auto target_frequency = voice.get_target_frequency();
         auto current_frequency = voice.get_current_frequency();
@@ -279,61 +361,21 @@ namespace deepnote
         }
         else
         {
-            //  If we want the frequency to decrease we need to flip the shaped value
-            if (start_frequency.get() > target_frequency.get())
-            {
-                shaped_lfo_value = nt::OscillatorValue(1.f - shaped_lfo_value.get());
-            }
-
-            //  Scale the 0.0 to 1.0 shaped value to the start and target frequency range
-            const auto animationScaler = Scaler(
-                nt::InputRange(Range(
-                    nt::RangeLow(0.f),
-                    nt::RangeHigh(1.f))),
-                nt::OutputRange(Range(
-                    nt::RangeLow(start_frequency.get()),
-                    nt::RangeHigh(target_frequency.get()))));
-
-            current_frequency = nt::OscillatorFrequency(animationScaler(shaped_lfo_value.get()));
+            current_frequency = calculate_shaped_frequency(voice, lfo_multiplier, cp1, cp2);
             unconstrained_freq = current_frequency;
-        }
-
-        // Valid frequencies are from start_frequency to target_frequency
-        const nt::OscillatorFrequencyRange validFrequencyRange(
-            Range(
-                nt::RangeLow(start_frequency.get()),
-                nt::RangeHigh(target_frequency.get())));
-
-        if (validFrequencyRange.get().contains(current_frequency.get()))
-        {
-            //  The frequency is within the valid range, so check to see if we've
-            //  reached the start or target frequency
-            if (state == voice.IN_TRANSIT_TO_TARGET)
-            {
-                const nt::OscillatorFrequencyRange targetRange(
-                    Range(
-                        nt::RangeLow(target_frequency.get() - constants::TARGET_FREQUENCY_TOLERANCE),
-                        nt::RangeHigh(target_frequency.get() + constants::TARGET_FREQUENCY_TOLERANCE)));
-
-                if (targetRange.get().contains(current_frequency.get()))
-                {
-                    state = voice.AT_TARGET;
-                    current_frequency = target_frequency;
-                }
+            state = update_voice_state(voice, current_frequency);
+            current_frequency = constrain_frequency(voice, current_frequency);
+            
+            // If we reached target after constraining, set exact target frequency
+            if (state == voice.AT_TARGET) {
+                current_frequency = target_frequency;
             }
-        }
-        else
-        {
-            // The frequency is outside the valid range, so constrain it
-            current_frequency = nt::OscillatorFrequency(validFrequencyRange.get().constrain(current_frequency.get()));
-            state = (state == voice.IN_TRANSIT_TO_TARGET) ? voice.AT_TARGET : state;
         }
 
         voice.set_current_frequency(current_frequency);
         voice.set_state(state);
 
         //  Update all oscillators using the new frequency
-        // const auto osc_value = voice.process_oscillators();
         nt::OscillatorValue osc_value = voice.process_oscillators();
 
         //  Give the traceFunctor a chance to log the state of the voice
@@ -342,8 +384,8 @@ namespace deepnote
             target_frequency.get(),
             in_state,
             state,
-            raw_lfo_value.get(),
-            shaped_lfo_value.get(),
+            0.0f, // raw_lfo_value - simplified for now
+            0.0f, // shaped_lfo_value - simplified for now
             unconstrained_freq.get(),
             current_frequency.get(),
             osc_value.get());
