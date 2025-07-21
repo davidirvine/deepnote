@@ -1,0 +1,153 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Code quality checks
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-format clang-tidy cppcheck
+        
+    - name: Run clang-format check
+      run: |
+        find src test -name "*.hpp" -o -name "*.cpp" | xargs clang-format --dry-run --Werror --style=file
+        
+    - name: Run static analysis
+      run: |
+        chmod +x scripts/static_analysis.sh
+        ./scripts/static_analysis.sh
+
+  # Build and test on multiple platforms
+  build-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        build-type: [Debug, Release]
+        
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        
+    - name: Configure CMake
+      run: |
+        cd test
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} ..
+        
+    - name: Build
+      run: |
+        cd test/build
+        cmake --build . --config ${{ matrix.build-type }}
+        
+    - name: Run tests
+      run: |
+        cd test/build
+        ctest --output-on-failure --build-config ${{ matrix.build-type }}
+
+  # Code coverage (Linux only)
+  coverage:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        
+    - name: Install coverage tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y lcov
+        
+    - name: Build with coverage
+      run: |
+        cd test
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage" ..
+        make
+        
+    - name: Run tests with coverage
+      run: |
+        cd test/build
+        ./bin/tests
+        
+    - name: Generate coverage report
+      run: |
+        cd test/build
+        lcov --capture --directory . --output-file coverage.info
+        lcov --remove coverage.info '/usr/*' --output-file coverage.info
+        lcov --remove coverage.info '*/thirdparty/*' --output-file coverage.info
+        lcov --list coverage.info
+        
+    - name: Upload to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: test/build/coverage.info
+        fail_ci_if_error: true
+
+  # Documentation generation
+  documentation:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        
+    - name: Install Doxygen
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y doxygen graphviz
+        
+    - name: Generate documentation
+      run: |
+        cd docs/doxygen
+        doxygen Doxyfile
+        
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: docs/doxygen/docs/html
+
+  # Performance benchmarks
+  benchmarks:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        
+    - name: Build benchmarks
+      run: |
+        cd test
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3 -DNDEBUG" ..
+        make
+        
+    - name: Run performance tests
+      run: |
+        cd test/build
+        # Add performance benchmark execution here
+        echo "Performance benchmarks would run here"

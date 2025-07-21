@@ -63,3 +63,7 @@ Thumbs.db
 
 # Test output files
 *.csv
+
+# Generated documentation
+docs/doxygen/docs/
+docs/html/
