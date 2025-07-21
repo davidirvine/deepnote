@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 
 namespace nt = deepnote::nt;
 
