@@ -45,9 +45,10 @@ g++ -std=c++14 -I../../src -I../../thirdparty/DaisySP/Source basic_usage.cpp ../
 **Features**:
 - Multi-platform testing (Linux, macOS, Windows)
 - Code quality checks (clang-format, clang-tidy, cppcheck)
-- Code coverage reporting with Codecov
+- Code coverage reporting with GitHub Actions native approach
 - Automatic documentation deployment to GitHub Pages
 - Performance benchmarking
+- CodeQL security analysis and vulnerability scanning
 
 ### 3. **Advanced Testing** 🧪
 **Current**: Basic unit tests ✅
