@@ -16,6 +16,7 @@ set(TESTS_SOUCES
     range.cpp
     scaler.cpp
     voice.cpp
+    performance_tests.cpp
 
 )
 
