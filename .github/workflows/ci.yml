@@ -117,17 +117,32 @@ jobs:
         lcov --remove coverage.info '*/thirdparty/*' --output-file coverage.info
         lcov --list coverage.info
         
-    - name: Upload to Codecov (disabled - repository setup needed)
-      if: false  # Temporarily disabled until repository is set up in Codecov
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      uses: codecov/codecov-action@v4
+    - name: Coverage report comment
+      if: github.event_name == 'pull_request'
+      uses: romeovs/lcov-reporter-action@v0.3.1
       with:
-        file: test/build/coverage.info
-        token: ${{ secrets.CODECOV_TOKEN }}
-        slug: davidirvine/deepnote
-        fail_ci_if_error: false
-        verbose: true
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        lcov-file: test/build/coverage.info
+        
+    - name: Generate coverage badge
+      if: github.ref == 'refs/heads/develop'
+      run: |
+        cd test/build
+        COVERAGE=$(lcov --summary coverage.info 2>&1 | grep -E "lines.*:" | awk '{print $2}' | sed 's/%//')
+        echo "Coverage: $COVERAGE%"
+        # Create badge URL
+        BADGE_COLOR="red"
+        if (( $(echo "$COVERAGE > 80" | bc -l) )); then BADGE_COLOR="green"; fi
+        if (( $(echo "$COVERAGE > 60 && $COVERAGE <= 80" | bc -l) )); then BADGE_COLOR="yellow"; fi
+        
+        curl -o coverage-badge.svg "https://img.shields.io/badge/coverage-${COVERAGE}%25-${BADGE_COLOR}"
+        
+    - name: Upload coverage badge
+      if: github.ref == 'refs/heads/develop'
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-badge
+        path: test/build/coverage-badge.svg
 
   # Documentation generation
   documentation:
