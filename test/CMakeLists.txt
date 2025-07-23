@@ -17,7 +17,7 @@ set(TESTS_SOUCES
     scaler.cpp
     voice.cpp
     performance_tests.cpp
-
+    property_edge_tests.cpp
 )
 
 add_executable(tests 
