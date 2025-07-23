@@ -1,21 +1,20 @@
-#include <doctest/doctest.h>
-#include <vector>
+#include "voice/deepnotevoice.hpp"
+#include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <doctest/doctest.h>
 #include <numeric>
-#include <algorithm>
-#include "voice/deepnotevoice.hpp"
+#include <vector>
 
 using namespace deepnote;
 
 /**
  * @file performance_tests.cpp
  * @brief Performance and real-time validation tests for the deepnote voice
- * 
+ *
  * These tests verify that the voice implementation meets real-time performance
  * requirements and maintains stable memory usage under various conditions.
  */
-
 TEST_CASE("Real-time processing validation") {
     SUBCASE("Single voice processing speed") {
         DeepnoteVoice voice;
