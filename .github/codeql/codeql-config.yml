@@ -14,4 +14,3 @@ paths-ignore:
   - "build/**"
   - "**/*.md"
   - "**/*.txt"
-  - "**/CMakeLists.txt"
