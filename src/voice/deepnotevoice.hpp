@@ -243,9 +243,10 @@ struct DeepnoteVoice
  * @param lfo_frequency Base LFO frequency for animation in Hz
  * @param detune Oscillator detuning amount in Hz (default: 2.5 Hz)
  */
-inline void init_voice(DeepnoteVoice &voice, const size_t oscillator_count, const nt::OscillatorFrequency start_frequency,
-                const nt::SampleRate sample_rate, const nt::OscillatorFrequency lfo_frequency,
-                const nt::DetuneHz detune = nt::DetuneHz(constants::DEFAULT_DETUNE_HZ))
+inline void init_voice(DeepnoteVoice &voice, const size_t oscillator_count,
+                       const nt::OscillatorFrequency start_frequency, const nt::SampleRate sample_rate,
+                       const nt::OscillatorFrequency lfo_frequency,
+                       const nt::DetuneHz            detune = nt::DetuneHz(constants::DEFAULT_DETUNE_HZ))
 {
     voice.set_start_frequency(start_frequency);
     voice.set_current_frequency(start_frequency);
