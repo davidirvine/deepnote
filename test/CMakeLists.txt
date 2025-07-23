@@ -19,6 +19,7 @@ set(TESTS_SOUCES
     performance_tests.cpp
     property_edge_tests.cpp
     statemachine_lifecycle_tests.cpp
+    bezier_animation_tests.cpp
 
 )
 
