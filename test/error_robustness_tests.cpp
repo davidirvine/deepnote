@@ -1,5 +1,6 @@
 #include "voice/deepnotevoice.hpp"
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <doctest/doctest.h>
 #include <limits>
