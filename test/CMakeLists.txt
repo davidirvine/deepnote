@@ -20,6 +20,7 @@ set(TESTS_SOUCES
     property_edge_tests.cpp
     statemachine_lifecycle_tests.cpp
     bezier_animation_tests.cpp
+    error_robustness_tests.cpp
 )
 
 add_executable(tests 

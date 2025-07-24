@@ -6,6 +6,7 @@ permissions:
   pages: write
   id-token: write
   actions: read
+  pull-requests: write
 
 on:
   push:
@@ -84,7 +85,7 @@ jobs:
   # Code coverage (Linux only)
   coverage:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop' || (github.event_name == 'pull_request' && github.base_ref == 'develop')
     
     steps:
     - uses: actions/checkout@v4
@@ -119,7 +120,7 @@ jobs:
         
     - name: Coverage report comment
       if: github.event_name == 'pull_request'
-      uses: romeovs/lcov-reporter-action@v0.3.1
+      uses: romeovs/lcov-reporter-action@v0.4.0
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         lcov-file: test/build/coverage.info
@@ -139,7 +140,7 @@ jobs:
         
     - name: Upload coverage badge
       if: github.ref == 'refs/heads/develop'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-badge
         path: test/build/coverage-badge.svg

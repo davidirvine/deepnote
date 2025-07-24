@@ -309,6 +309,8 @@ TEST_CASE("Performance regression detection")
                 process_voice(voice, nt::AnimationMultiplier(1.0f), nt::ControlPoint1(0.5f), nt::ControlPoint2(0.5f));
             auto end = std::chrono::high_resolution_clock::now();
 
+            (void) output; // Suppress unused variable warning
+
             pending_times.push_back(std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
 
             if(voice.get_state() != DeepnoteVoice::State::PENDING_TRANSIT_TO_TARGET)
@@ -324,6 +326,8 @@ TEST_CASE("Performance regression detection")
             auto output =
                 process_voice(voice, nt::AnimationMultiplier(1.0f), nt::ControlPoint1(0.5f), nt::ControlPoint2(0.5f));
             auto end = std::chrono::high_resolution_clock::now();
+
+            (void) output; // Suppress unused variable warning
 
             transit_times.push_back(std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
         }
@@ -346,6 +350,8 @@ TEST_CASE("Performance regression detection")
             auto output =
                 process_voice(voice, nt::AnimationMultiplier(1.0f), nt::ControlPoint1(0.5f), nt::ControlPoint2(0.5f));
             auto end = std::chrono::high_resolution_clock::now();
+
+            (void) output; // Suppress unused variable warning
 
             target_times.push_back(std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
         }

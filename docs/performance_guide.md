@@ -58,7 +58,29 @@ nt::ControlPoint1(0.25f), nt::ControlPoint2(0.75f) // Mild curve
 nt::ControlPoint1(0.1f), nt::ControlPoint2(0.9f)   // Strong curve
 ```
 
+#### 4. Detuning Considerations
+```cpp
+// Moderate detuning provides good sonic character without excessive amplitude
+voice.detune_oscillators(nt::DetuneHz(5.0f));   // Subtle beating
+voice.detune_oscillators(nt::DetuneHz(20.0f));  // Noticeable detuning
+voice.detune_oscillators(nt::DetuneHz(50.0f));  // Strong detuning effect
+
+// ⚠️ Avoid extreme detuning with many oscillators - can cause high amplitudes
+// voice.detune_oscillators(nt::DetuneHz(500.0f)); // Too extreme for many oscillators
+```
+
 ## Real-Time Constraints
+
+### Amplitude Management
+The deepnote voice can produce varying output amplitudes depending on configuration:
+
+```cpp
+// Typical amplitude ranges for different configurations:
+// 1-2 oscillators, no detuning: 0-50 amplitude units
+// 4-6 oscillators, moderate detuning (±20Hz): 50-500 amplitude units  
+// 8+ oscillators, strong detuning (±50Hz): 500-2000 amplitude units
+// Extreme configurations may require output limiting/compression
+```
 
 ### Buffer Sizes
 Recommended audio buffer sizes for different scenarios:
