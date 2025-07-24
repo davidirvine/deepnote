@@ -221,7 +221,7 @@ TEST_CASE("Boundary condition handling")
 
         // Test detuning values with more reasonable bounds
         std::vector<float> detune_values = {
-            -100.0f, // Large negative detuning  
+            -100.0f, // Large negative detuning
             -50.0f,  // Moderate negative detuning
             -10.0f,  // Small negative detuning
             -1.0f,   // Very small negative detuning
@@ -244,19 +244,20 @@ TEST_CASE("Boundary condition handling")
 
                 REQUIRE(std::isfinite(output.get()));
                 // More reasonable bound for 3 oscillators with moderate detuning
-                REQUIRE(std::abs(output.get()) < 5000.0f); 
+                REQUIRE(std::abs(output.get()) < 5000.0f);
             }
 
             INFO("Detuning " << detune << "Hz handled successfully");
         }
-        
+
         // Separate test for extreme detuning with just 2 oscillators to minimize amplitude
         DeepnoteVoice extreme_voice;
-        init_voice(extreme_voice, 2, nt::OscillatorFrequency(440.0f), nt::SampleRate(48000.0f), nt::OscillatorFrequency(1.0f));
-        
+        init_voice(extreme_voice, 2, nt::OscillatorFrequency(440.0f), nt::SampleRate(48000.0f),
+                   nt::OscillatorFrequency(1.0f));
+
         // Use more reasonable "extreme" detuning values that still test robustness
         std::vector<float> extreme_detune_values = {-200.0f, 200.0f};
-        
+
         for(float detune : extreme_detune_values)
         {
             extreme_voice.detune_oscillators(nt::DetuneHz(detune));
@@ -269,7 +270,7 @@ TEST_CASE("Boundary condition handling")
 
                 REQUIRE(std::isfinite(output.get()));
                 // Reasonable bound for extreme detuning cases
-                REQUIRE(std::abs(output.get()) < 3000.0f); 
+                REQUIRE(std::abs(output.get()) < 3000.0f);
             }
 
             INFO("Extreme detuning " << detune << "Hz handled successfully");
