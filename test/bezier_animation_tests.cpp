@@ -174,7 +174,7 @@ TEST_CASE("Animation interpolation accuracy")
     SUBCASE("Linear interpolation verification")
     {
         // Test that linear curve produces approximately linear interpolation
-        // Note: (0.0, 1.0) control points don't produce perfectly linear curves in cubic Bezier
+        // Note: (0.33, 0.67) control points are used here to approximate linearity in cubic Bezier curves
         BezierUnitShaper linear_shaper(nt::ControlPoint1(0.33f), nt::ControlPoint2(0.67f));
 
         for(int i = 0; i <= 100; ++i)
