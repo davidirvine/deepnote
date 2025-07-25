@@ -116,6 +116,9 @@ jobs:
         lcov --capture --directory . --output-file coverage.info
         lcov --remove coverage.info '/usr/*' --output-file coverage.info
         lcov --remove coverage.info '*/thirdparty/*' --output-file coverage.info
+        lcov --remove coverage.info '*/test/*' --output-file coverage.info
+        lcov --remove coverage.info '*_tests.cpp' --output-file coverage.info
+        lcov --remove coverage.info '*/doctest/*' --output-file coverage.info
         lcov --list coverage.info
         
     - name: Coverage report comment
