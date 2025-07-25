@@ -6,9 +6,7 @@ The voice is written as a header only C++14 library. [DaisySP](https://github.co
 
 [deepnote-rack](https://github.com/davidirvine/deepnote-rack) wraps a VCVRack module around a `deepnote` voice providing CV control over voice parameters. 
 
-[deepnote-seed](https://github.com/davidirvine/deepnote-seed) embeds a `deepnote` voice into Daisy Seed hardware providing physical control over voice parameters. 
-
-[Documentation](https://davidirvine.github.io/deepnote)
+[deepnote-seed](https://github.com/davidirvine/deepnote-seed) embeds a `deepnote` voice into Daisy Seed hardware providing physical control over voice parametes. 
 
 ## Overview
 

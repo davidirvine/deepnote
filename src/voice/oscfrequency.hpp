@@ -4,8 +4,8 @@
 
 namespace deepnote
 {
-namespace nt
-{
-using OscillatorFrequency = NamedType<float, struct OscillatorFrequencyTag>;
-}
+    namespace nt
+    {
+        using OscillatorFrequency = NamedType<float, struct OscillatorFrequencyTag>;
+    }
 } // namespace deepnote
