@@ -114,8 +114,14 @@ jobs:
       run: |
         cd test/build
         lcov --capture --directory . --output-file coverage.info
-        lcov --remove coverage.info '/usr/*' --output-file coverage.info
-        lcov --remove coverage.info '*/thirdparty/*' --output-file coverage.info
+        lcov --remove coverage.info \
+          '/usr/*' \
+          '*/thirdparty/*' \
+          '*/test/*' \
+          '*_tests.cpp' \
+          '*/doctest/*' \
+          --output-file coverage.info \
+          --ignore-errors unused
         lcov --list coverage.info
         
     - name: Coverage report comment
