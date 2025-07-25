@@ -1,0 +1,16 @@
+name: "DeepNote CodeQL Config"
+disable-default-queries: false
+queries:
+  - uses: security-and-quality
+
+# Only analyze source code in the src/ directory
+paths:
+  - "src/**"
+
+# Exclude test code, third-party dependencies, and build artifacts
+paths-ignore:
+  - "test/**"
+  - "thirdparty/**"
+  - "build/**"
+  - "**/*.md"
+  - "**/*.txt"

@@ -1,41 +1,45 @@
 #pragma once
 
-#include "ranges/range.hpp"
 #include "oscfrequency.hpp"
+#include "ranges/range.hpp"
 #include <array>
 #include <functional>
 
 namespace deepnote
 {
-    namespace nt
+namespace nt
+{
+using FrequencyTableIndex = NamedType<unsigned int, struct FrequencyTableIndexTag>;
+using VoiceIndex          = NamedType<unsigned int, struct VoiceIndexTag>;
+} // namespace nt
+
+using FrequencyFunc = std::function<nt::OscillatorFrequency()>;
+
+template <unsigned int TABLE_HEIGHT, unsigned int TABLE_WIDTH> struct FrequencyTable
+{
+    //  the table is a 2D array of functions that return a frequency
+    using TableType = std::array<std::array<FrequencyFunc, TABLE_WIDTH>, TABLE_HEIGHT>;
+
+    explicit FrequencyTable(const TableType &table)
+        : freq_functions(table)
     {
-        using FrequencyTableIndex = NamedType<unsigned int, struct FrequencyTableIndexTag>;
-        using VoiceIndex = NamedType<unsigned int, struct VoiceIndexTag>;
     }
 
-    using FrequencyFunc = std::function<nt::OscillatorFrequency()>;
+    FrequencyTable(const FrequencyTable<TABLE_HEIGHT, TABLE_WIDTH> &other) = default;
+    FrequencyTable(FrequencyTable<TABLE_HEIGHT, TABLE_WIDTH> &&other)      = default;
+    FrequencyTable<TABLE_HEIGHT, TABLE_WIDTH> &
+    operator=(const FrequencyTable<TABLE_HEIGHT, TABLE_WIDTH> &other) = default;
+    ~FrequencyTable()                                                 = default;
 
-    template <unsigned int TABLE_HEIGHT, unsigned int TABLE_WIDTH>
-    struct FrequencyTable
+    nt::OscillatorFrequency get(const nt::FrequencyTableIndex table_index, const nt::VoiceIndex voice_index) const
     {
-        //  the table is a 2D array of functions that return a frequency
-        using TableType = std::array<std::array<FrequencyFunc, TABLE_WIDTH>, TABLE_HEIGHT>;
+        // ensure that table_index and voice_index are within the bounds of the table
+        // values will wrap around if they are out of bounds
+        return freq_functions[table_index.get() % TABLE_HEIGHT][voice_index.get() % TABLE_WIDTH]();
+    }
 
-        FrequencyTable(const TableType &table) : freq_functions(table) {};
-        FrequencyTable(const FrequencyTable<TABLE_HEIGHT, TABLE_WIDTH> &other) = default;
-        FrequencyTable(FrequencyTable<TABLE_HEIGHT, TABLE_WIDTH> &&other) = default;
-        FrequencyTable<TABLE_HEIGHT, TABLE_WIDTH> &operator=(const FrequencyTable<TABLE_HEIGHT, TABLE_WIDTH> &other) = default;
-        ~FrequencyTable() = default;
+  private:
+    TableType freq_functions;
+};
 
-        nt::OscillatorFrequency get(const nt::FrequencyTableIndex table_index, const nt::VoiceIndex voice_index) const
-        {
-            // ensure that table_index and voice_index are within the bounds of the table
-            // values will wrap around if they are out of bounds 
-            return freq_functions[table_index.get() % TABLE_HEIGHT][voice_index.get() % TABLE_WIDTH]();
-        }
-
-    private:
-        TableType freq_functions;
-    };
-    
 } // namespace deepnote

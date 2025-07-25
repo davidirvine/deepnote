@@ -1,0 +1,103 @@
+# Doxyfile for deepnote library documentation
+
+PROJECT_NAME           = "Deepnote Synthesizer Voice Library"
+PROJECT_NUMBER         = "v1.0.0"
+PROJECT_BRIEF          = "A C++14 header-only library implementing the THX Deep Note effect"
+
+OUTPUT_DIRECTORY       = docs/
+CREATE_SUBDIRS         = NO
+
+INPUT                  = ../../src/ mainpage.md
+FILE_PATTERNS          = *.hpp *.cpp *.md
+RECURSIVE              = YES
+
+EXCLUDE_PATTERNS       = */thirdparty/* */build/* */test/*
+
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+
+GENERATE_HTML          = YES
+HTML_OUTPUT            = .
+HTML_FILE_EXTENSION    = .html
+HTML_COLORSTYLE_HUE    = 220
+HTML_COLORSTYLE_SAT    = 100
+HTML_COLORSTYLE_GAMMA  = 80
+
+GENERATE_LATEX         = NO
+
+EXTRACT_ALL            = NO
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+
+HAVE_DOT               = NO
+
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = YES
+
+OPTIMIZE_OUTPUT_FOR_C  = NO
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = YES
+
+# Only show documented items
+HIDE_UNDOC_MEMBERS     = YES
+HIDE_UNDOC_CLASSES     = YES
+HIDE_FRIEND_COMPOUNDS  = YES
+HIDE_IN_BODY_DOCS      = NO
+
+# Additional cleanup options
+SORT_MEMBER_DOCS       = YES
+SORT_BRIEF_DOCS        = YES
+SORT_MEMBERS_CTORS_1ST = YES
+SHOW_USED_FILES        = NO
+SHOW_FILES             = YES
+SHOW_NAMESPACES        = YES
+
+GENERATE_TREEVIEW      = YES
+USE_MATHJAX            = YES
+
+# Search functionality
+SEARCHENGINE           = YES
+SERVER_BASED_SEARCH    = NO
+
+# Custom CSS and header
+HTML_EXTRA_STYLESHEET  = 
+HTML_HEADER            = 
+HTML_FOOTER            = 
+
+# Warnings
+QUIET                  = NO
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = NO
+
+# Input filters
+INPUT_FILTER           = 
+FILTER_PATTERNS        = 
+
+# Preprocessing
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = NO
+SEARCH_INCLUDES        = YES
+INCLUDE_PATH           = ../../src/
+PREDEFINED             = 
+
+# Graphical output
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+GROUP_GRAPHS           = YES
+UML_LOOK               = NO
+TEMPLATE_RELATIONS     = YES
+INCLUDE_GRAPH          = YES
+INCLUDED_BY_GRAPH      = YES
+CALL_GRAPH             = NO
+CALLER_GRAPH           = NO
+GRAPHICAL_HIERARCHY    = YES
+DIRECTORY_GRAPH        = YES
+
+# Aliases for common documentation patterns
+ALIASES                = "realtime=\par Real-time Safety:\n" \
+                        "performance=\par Performance Notes:\n" \
+                        "example=\par Example:\n" \
+                        "threadsafe=\par Thread Safety:\n"
