@@ -3,7 +3,7 @@
 
 int get_index(float voct_voltage)
 {
-    return ((voct_voltage - (int) voct_voltage) / 0.083f) + 0.5f;
+    return ((voct_voltage - (int)voct_voltage) / 0.083f) + 0.5f;
 }
 
 TEST_CASE("Math test")
